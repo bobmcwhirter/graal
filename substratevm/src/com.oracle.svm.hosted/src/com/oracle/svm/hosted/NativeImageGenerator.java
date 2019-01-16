@@ -787,6 +787,7 @@ public class NativeImageGenerator {
                 Platform platform = defaultPlatform(loader.getClassLoader());
                 SubstrateTargetDescription target = createTarget(platform);
                 ImageSingletons.add(Platform.class, platform);
+                ImageSingletons.add(TargetDescription.class, target);
                 ImageSingletons.add(SubstrateTargetDescription.class, target);
 
                 if (javaMainSupport != null) {
