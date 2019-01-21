@@ -92,7 +92,7 @@ class HeapChunkProvider {
 
     @AlwaysInline("Remove all logging when noopLog is returned by this method")
     private static Log log() {
-        return Log.noopLog();
+        return Log.log();
     }
 
     /** Throw the pre-allocated singleton instance to indicate failure from an Allocator method. */

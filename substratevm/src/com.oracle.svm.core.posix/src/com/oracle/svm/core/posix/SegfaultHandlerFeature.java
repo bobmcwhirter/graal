@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,6 @@ import org.graalvm.nativeimage.c.type.CLongPointer;
 import org.graalvm.word.WordFactory;
 
 import com.oracle.svm.core.OS;
-import com.oracle.svm.core.SubstrateUtil;
 import com.oracle.svm.core.annotate.AutomaticFeature;
 import com.oracle.svm.core.annotate.RestrictHeapAccess;
 import com.oracle.svm.core.annotate.Uninterruptible;
@@ -53,7 +52,6 @@ import com.oracle.svm.core.option.RuntimeOptionKey;
 import com.oracle.svm.core.posix.headers.LibC;
 import com.oracle.svm.core.posix.headers.Signal;
 import com.oracle.svm.core.posix.headers.Signal.AdvancedSignalDispatcher;
-import com.oracle.svm.core.posix.headers.Signal.GregsPointer;
 import com.oracle.svm.core.posix.headers.Signal.sigaction;
 import com.oracle.svm.core.posix.headers.Signal.siginfo_t;
 import com.oracle.svm.core.posix.headers.Signal.ucontext_t;
@@ -92,7 +90,7 @@ interface AMD64RegisterReader {
 
 @Platforms({Platform.LINUX_AMD64.class})
 class LinuxAMD64RegisterReader implements AMD64RegisterReader {
-    private GregsPointer gregs;
+    private Signal.GregsPointer gregs;
 
     @Override
     public void setRegistersPointer(ucontext_t ucontext) {
@@ -154,7 +152,7 @@ class DarwinAMD64RegisterReader implements AMD64RegisterReader {
 
     @Override
     public void setRegistersPointer(ucontext_t ucontext) {
-        context = ucontext.uc_mcontext();
+        context = ucontext.uc_mcontext64();
     }
 
     private long readRegisterAt(int i) {
@@ -253,31 +251,8 @@ class SubstrateSegfaultHandler {
         log.autoflush(true);
         log.string("[ [ SubstrateSegfaultHandler caught signal ").signed(signalNumber).string(" ] ]").newline();
 
-        log.newline().string("General Purpose Register Set Values: ").newline();
-        log.indent(true);
-        log.string("RAX ").zhex(regs.readRegister(AMD64Register.REG_RAX)).newline();
-        log.string("RBX ").zhex(regs.readRegister(AMD64Register.REG_RBX)).newline();
-        log.string("RCX ").zhex(regs.readRegister(AMD64Register.REG_RCX)).newline();
-        log.string("RDX ").zhex(regs.readRegister(AMD64Register.REG_RDX)).newline();
-        log.string("RBP ").zhex(regs.readRegister(AMD64Register.REG_RBP)).newline();
-        log.string("RSI ").zhex(regs.readRegister(AMD64Register.REG_RSI)).newline();
-        log.string("RDI ").zhex(regs.readRegister(AMD64Register.REG_RDI)).newline();
-        log.string("RSP ").zhex(regs.readRegister(AMD64Register.REG_RSP)).newline();
-        log.string("R8  ").zhex(regs.readRegister(AMD64Register.REG_R8)).newline();
-        log.string("R9  ").zhex(regs.readRegister(AMD64Register.REG_R9)).newline();
-        log.string("R10 ").zhex(regs.readRegister(AMD64Register.REG_R10)).newline();
-        log.string("R11 ").zhex(regs.readRegister(AMD64Register.REG_R11)).newline();
-        log.string("R12 ").zhex(regs.readRegister(AMD64Register.REG_R12)).newline();
-        log.string("R13 ").zhex(regs.readRegister(AMD64Register.REG_R13)).newline();
-        log.string("R14 ").zhex(regs.readRegister(AMD64Register.REG_R14)).newline();
-        log.string("R15 ").zhex(regs.readRegister(AMD64Register.REG_R15)).newline();
-        log.string("EFL ").zhex(regs.readRegister(AMD64Register.REG_EFL)).newline();
-        log.string("RIP ").zhex(regs.readRegister(AMD64Register.REG_RIP)).newline();
-        log.indent(false);
-
-        SubstrateUtil.printDiagnostics(log, WordFactory.pointer(regs.readRegister(AMD64Register.REG_RSP)), WordFactory.pointer(regs.readRegister(AMD64Register.REG_RIP)));
+        ImageSingletons.lookup(UContextRegisterDumper.class).dumpRegisters(log, uContext);
         log.string("Use runtime option -R:-InstallSegfaultHandler if you don't want to use SubstrateSegfaultHandler.").newline();
-
         log.newline().string("Bye bye ...").newline().newline();
         ImageSingletons.lookup(LogHandler.class).fatalError();
     }

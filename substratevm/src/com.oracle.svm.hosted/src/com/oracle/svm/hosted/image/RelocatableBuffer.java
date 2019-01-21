@@ -75,6 +75,12 @@ public final class RelocatableBuffer {
         return result;
     }
 
+    public RelocatableBuffer.Info addRelocation(int key, ObjectFile.RelocationKind relocationKind, int relocationSize, Long explicitAddend, Object targetObject) {
+        final RelocatableBuffer.Info info = infoFactory(relocationKind, relocationSize, explicitAddend, targetObject);
+        final RelocatableBuffer.Info result = putInfo(key, info);
+        return result;
+    }
+
     public int mapSize() {
         return getMap().size();
     }
