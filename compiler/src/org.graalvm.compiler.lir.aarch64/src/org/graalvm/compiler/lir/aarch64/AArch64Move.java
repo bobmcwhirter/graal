@@ -587,7 +587,7 @@ public class AArch64Move {
         protected final LIRKindTool lirKindTool;
 
         protected PointerCompressionOp(LIRInstructionClass<? extends PointerCompressionOp> type, AllocatableValue result, Value input,
-                                       AllocatableValue baseRegister, CompressEncoding encoding, boolean nonNull, LIRKindTool lirKindTool) {
+                        AllocatableValue baseRegister, CompressEncoding encoding, boolean nonNull, LIRKindTool lirKindTool) {
 
             super(type);
             this.result = result;
@@ -635,7 +635,7 @@ public class AArch64Move {
         }
 
         private CompressPointerOp(LIRInstructionClass<? extends PointerCompressionOp> type, AllocatableValue result, Value input,
-                                  AllocatableValue baseRegister, CompressEncoding encoding, boolean nonNull, LIRKindTool lirKindTool) {
+                        AllocatableValue baseRegister, CompressEncoding encoding, boolean nonNull, LIRKindTool lirKindTool) {
 
             super(type, result, input, baseRegister, encoding, nonNull, lirKindTool);
         }
@@ -677,7 +677,7 @@ public class AArch64Move {
         }
 
         private UncompressPointerOp(LIRInstructionClass<? extends PointerCompressionOp> type, AllocatableValue result, Value input,
-                                    AllocatableValue baseRegister, CompressEncoding encoding, boolean nonNull, LIRKindTool lirKindTool) {
+                        AllocatableValue baseRegister, CompressEncoding encoding, boolean nonNull, LIRKindTool lirKindTool) {
             super(type, result, input, baseRegister, encoding, nonNull, lirKindTool);
         }
 
