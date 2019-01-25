@@ -525,7 +525,7 @@ public class AArch64Move {
                     masm.mov(dst, 0);
                 } else if (crb.target.inlineObjects) {
                     crb.recordInlineDataInCode(input);
-                    masm.movNativeAddress(dst, 0xDEADDEADDEADDEADL, true);
+                    masm.mov(dst, 0xDEADDEADDEADDEADL, true);
                 } else {
                     masm.ldr(64, dst, (AArch64Address) crb.recordDataReferenceInCode(input, 8));
                 }

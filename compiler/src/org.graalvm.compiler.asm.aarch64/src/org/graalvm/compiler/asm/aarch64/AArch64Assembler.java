@@ -972,8 +972,10 @@ public abstract class AArch64Assembler extends Assembler {
         int instrEncoding = instr.encoding | UnconditionalBranchImmOp;
         if (pos == -1) {
             emitInt(instrEncoding | imm);
+            annotatePatchingImmediate(position(), 28);
         } else {
             emitInt(instrEncoding | imm, pos);
+            annotatePatchingImmediate(pos, 28);
         }
     }
 
@@ -1011,6 +1013,7 @@ public abstract class AArch64Assembler extends Assembler {
         assert !reg.equals(zr);
         assert !reg.equals(sp);
         emitInt(instr.encoding | UnconditionalBranchRegOp | rs1(reg));
+
     }
 
     /* Load-Store Single Register (5.3.1) */
@@ -2831,6 +2834,29 @@ public abstract class AArch64Assembler extends Assembler {
      */
     public void dmb(BarrierKind barrierKind) {
         emitInt(DMB.encoding | BarrierOp | barrierKind.encoding << BarrierKindOffset);
+    }
+
+    void annotatePatchingImmediate(int pos, int operandSizeBits) {
+        if (codePatchingAnnotationConsumer != null) {
+            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(pos, operandSizeBits));
+        }
+
+    }
+
+    public static class OperandDataAnnotation extends CodeAnnotation {
+
+        public final int instructionPosition;
+
+        /**
+         * The size of the operand, in bytes.
+         */
+        public final int operandSizeBits;
+
+        OperandDataAnnotation(int instructionPosition, int operandSizeBits) {
+            super(instructionPosition);
+            this.instructionPosition = instructionPosition;
+            this.operandSizeBits = operandSizeBits;
+        }
     }
 
 }
