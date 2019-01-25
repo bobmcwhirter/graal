@@ -66,7 +66,7 @@ public class AArch64GraphBuilderPlugins {
             public void run() {
                 registerIntegerLongPlugins(invocationPlugins, AArch64IntegerSubstitutions.class, JavaKind.Int, bytecodeProvider);
                 registerIntegerLongPlugins(invocationPlugins, AArch64LongSubstitutions.class, JavaKind.Long, bytecodeProvider);
-                registerMathPlugins(invocationPlugins);
+                // registerMathPlugins(invocationPlugins);
                 registerStringLatin1Plugins(invocationPlugins, bytecodeProvider);
                 registerStringUTF16Plugins(invocationPlugins, bytecodeProvider);
                 registerUnsafePlugins(invocationPlugins, bytecodeProvider);

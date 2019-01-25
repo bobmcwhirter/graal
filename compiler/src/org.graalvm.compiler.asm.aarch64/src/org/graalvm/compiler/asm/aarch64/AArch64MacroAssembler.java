@@ -1623,7 +1623,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     }
 
     public void pause() {
-        throw GraalError.unimplemented();
+        super.hint(SystemHint.YIELD);
     }
 
     /**
