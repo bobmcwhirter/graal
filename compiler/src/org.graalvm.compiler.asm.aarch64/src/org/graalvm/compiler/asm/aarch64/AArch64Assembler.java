@@ -2845,8 +2845,6 @@ public abstract class AArch64Assembler extends Assembler {
 
     public static class OperandDataAnnotation extends CodeAnnotation {
 
-        public final int instructionPosition;
-
         /**
          * The size of the operand, in bytes.
          */
@@ -2854,7 +2852,6 @@ public abstract class AArch64Assembler extends Assembler {
 
         OperandDataAnnotation(int instructionPosition, int operandSizeBits) {
             super(instructionPosition);
-            this.instructionPosition = instructionPosition;
             this.operandSizeBits = operandSizeBits;
         }
     }

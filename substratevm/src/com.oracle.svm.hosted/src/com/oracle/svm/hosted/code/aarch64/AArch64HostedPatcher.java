@@ -74,7 +74,23 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
     @Uninterruptible(reason = ".")
     @Override
     public void patch(int codePos, int relative, byte[] code) {
+        int curValue = relative - 4; // 32-bit instr, next is 4 bytes away.
 
+        int bitsRemaining = annotation.operandSizeBits;
+        
+        for ( int i = 0 ; i < 4 ; ++i ) {
+            if ( bitsRemaining >= 8) {
+                code[annotation.instructionPosition + i] = (byte) (curValue & 0xFF);
+                bitsRemaining -= 8;
+            } else {
+                int mask = 0;
+                for ( int j = 0 ; j < bitsRemaining ; ++j ) {
+                    mask |= ( 1 << j );
+                }
+                code[annotation.instructionPosition + i] = (byte) ( ( (byte) (curValue & mask) ) | ( code[annotation.instructionPosition & ~mask]) );
+            }
+            curValue = curValue >>> 8;
+        }
     }
 
     @Override
