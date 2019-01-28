@@ -41,6 +41,8 @@ import org.graalvm.compiler.debug.Indent;
 import org.graalvm.word.WordFactory;
 
 import com.oracle.objectfile.ObjectFile;
+import com.oracle.svm.core.util.VMError;
+import com.oracle.svm.core.util.VMError.HostedError;
 import com.oracle.svm.hosted.code.HostedPatcher;
 import com.oracle.svm.hosted.image.NativeBootImage.NativeTextSectionImpl;
 import com.oracle.svm.hosted.meta.HostedMethod;

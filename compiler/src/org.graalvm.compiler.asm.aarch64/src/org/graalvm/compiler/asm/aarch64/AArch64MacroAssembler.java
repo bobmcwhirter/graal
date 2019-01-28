@@ -266,7 +266,9 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      * @return AArch64Address pointing to memory at {@code base + displacement}.
      */
     public AArch64Address makeAddress(Register base, long displacement, int transferSize) {
-        return makeAddress(base, displacement, zr, /* signExtend */false, transferSize, zr, /* allowOverwrite */false);
+        return makeAddress(base, displacement, zr, /* signExtend */false, transferSize, zr, /*
+                                                                                             * allowOverwrite
+                                                                                             */false);
     }
 
     /**
@@ -344,6 +346,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     private void mov64(Register dst, long imm) {
         // We have to move all non zero parts of the immediate in 16-bit chunks
         boolean firstMove = true;
+        annotatePatchingImmediate(position(), 64);
         for (int offset = 0; offset < 64; offset += 16) {
             int chunk = (int) (imm >> offset) & NumUtil.getNbitNumberInt(16);
             if (chunk == 0) {
@@ -371,6 +374,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      */
     public void mov(Register dst, long imm, boolean annotateImm) {
         assert dst.getRegisterCategory().equals(CPU);
+        int posBefore = position();
         if (imm == 0L) {
             movx(dst, zr);
         } else if (LogicalImmediateTable.isRepresentable(true, imm) != LogicalImmediateTable.Representable.NO) {
@@ -387,7 +391,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         }
 
         if (annotateImm && codePatchingAnnotationConsumer != null) {
-            // TODO write this
+            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(posBefore, 64));
         }
     }
 
@@ -415,6 +419,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert (imm & 0xFFFF_0000_0000_0000L) == 0;
         // We have to move all non zero parts of the immediate in 16-bit chunks
         boolean firstMove = true;
+        annotatePatchingImmediate(position(), 64);
         for (int offset = 0; offset < 48; offset += 16) {
             int chunk = (int) (imm >> offset) & NumUtil.getNbitNumberInt(16);
             if (firstMove) {
@@ -427,6 +432,12 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert !firstMove;
     }
 
+    public void recordLongCall() {
+        if (codePatchingAnnotationConsumer != null) {
+            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(position(), 64));
+        }
+    }
+
     /**
      * Generates a 32-bit immediate move code sequence. The immediate may later be updated by
      * HotSpot.
@@ -436,6 +447,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      */
     public void movNarrowAddress(Register dst, long imm) {
         assert (imm & 0xFFFF_FFFF_0000_0000L) == 0;
+        annotatePatchingImmediate(position(), 32);
         movz(64, dst, (int) (imm >>> 16), 16);
         movk(64, dst, (int) (imm & 0xffff), 0);
     }
@@ -1730,7 +1742,9 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      */
     @Override
     public AArch64Address makeAddress(Register base, int displacement) {
-        return makeAddress(base, displacement, zr, /* signExtend */false, /* transferSize */0, zr, /* allowOverwrite */false);
+        return makeAddress(base, displacement, zr, /* signExtend */false, /* transferSize */0, zr, /*
+                                                                                                    * allowOverwrite
+                                                                                                    */false);
     }
 
     @Override

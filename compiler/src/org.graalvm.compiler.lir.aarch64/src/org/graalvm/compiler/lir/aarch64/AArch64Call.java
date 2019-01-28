@@ -207,6 +207,7 @@ public class AArch64Call {
 
     public static void directCall(CompilationResultBuilder crb, AArch64MacroAssembler masm, InvokeTarget callTarget, Register scratch, LIRFrameState info, Label label) {
         int before = masm.position();
+        masm.recordLongCall();
         if (scratch != null) {
             if (GeneratePIC.getValue(crb.getOptions())) {
                 masm.bl(0);
