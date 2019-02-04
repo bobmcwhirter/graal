@@ -971,11 +971,11 @@ public abstract class AArch64Assembler extends Assembler {
         int imm = (imm28 & NumUtil.getNbitNumberInt(28)) >> 2;
         int instrEncoding = instr.encoding | UnconditionalBranchImmOp;
         if (pos == -1) {
+            annotatePatchingImmediate(position(), 28, 0);
             emitInt(instrEncoding | imm);
-            annotatePatchingImmediate(position(), 28);
         } else {
+            annotatePatchingImmediate(pos, 28, 0);
             emitInt(instrEncoding | imm, pos);
-            annotatePatchingImmediate(pos, 28);
         }
     }
 
@@ -1164,9 +1164,11 @@ public abstract class AArch64Assembler extends Assembler {
         int memop = instr.encoding | transferSizeEncoding | is32Bit | isFloat | rt(reg);
         switch (address.getAddressingMode()) {
             case IMMEDIATE_SCALED:
+                annotatePatchingImmediate( position(), 12, LoadStoreScaledImmOffset );
                 emitInt(memop | LoadStoreScaledOp | address.getImmediate() << LoadStoreScaledImmOffset | rs1(address.getBase()));
                 break;
             case IMMEDIATE_UNSCALED:
+                annotatePatchingImmediate( position(), 9, LoadStoreUnscaledImmOffset );
                 emitInt(memop | LoadStoreUnscaledOp | address.getImmediate() << LoadStoreUnscaledImmOffset | rs1(address.getBase()));
                 break;
             case BASE_REGISTER_ONLY:
@@ -1181,12 +1183,15 @@ public abstract class AArch64Assembler extends Assembler {
             case PC_LITERAL:
                 assert log2TransferSize >= 2 : "PC literal loads only works for load/stores of 32-bit and larger";
                 transferSizeEncoding = (log2TransferSize - 2) << LoadStoreTransferSizeOffset;
+                annotatePatchingImmediate( position(), 21, LoadLiteralImmeOffset );
                 emitInt(transferSizeEncoding | isFloat | LoadLiteralOp | rd(reg) | address.getImmediate() << LoadLiteralImmeOffset);
                 break;
             case IMMEDIATE_POST_INDEXED:
+                annotatePatchingImmediate( position(), 9, LoadStoreIndexedImmOffset );
                 emitInt(memop | LoadStorePostIndexedOp | rs1(address.getBase()) | address.getImmediate() << LoadStoreIndexedImmOffset);
                 break;
             case IMMEDIATE_PRE_INDEXED:
+                annotatePatchingImmediate( position(), 9, LoadStoreIndexedImmOffset );
                 emitInt(memop | LoadStorePreIndexedOp | rs1(address.getBase()) | address.getImmediate() << LoadStoreIndexedImmOffset);
                 break;
             default:
@@ -2836,11 +2841,16 @@ public abstract class AArch64Assembler extends Assembler {
         emitInt(DMB.encoding | BarrierOp | barrierKind.encoding << BarrierKindOffset);
     }
 
-    void annotatePatchingImmediate(int pos, int operandSizeBits) {
+    void annotatePatchingImmediate(int pos, int operandSizeBits, int offsetBits) {
         if (codePatchingAnnotationConsumer != null) {
-            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(pos, operandSizeBits));
+            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(pos, operandSizeBits, offsetBits));
         }
+    }
 
+    void annotatePatchingImmediateNativeAddress(int pos, int operandSizeBits, int numInstrs) {
+        if (codePatchingAnnotationConsumer != null) {
+            codePatchingAnnotationConsumer.accept(new NativeAddressOperandDataAnnotation(pos, operandSizeBits, numInstrs));
+        }
     }
 
     public static class OperandDataAnnotation extends CodeAnnotation {
@@ -2849,10 +2859,27 @@ public abstract class AArch64Assembler extends Assembler {
          * The size of the operand, in bytes.
          */
         public final int operandSizeBits;
+        public final int offsetBits;
 
-        OperandDataAnnotation(int instructionPosition, int operandSizeBits) {
+        OperandDataAnnotation(int instructionPosition, int operandSizeBits, int offsetBits) {
             super(instructionPosition);
             this.operandSizeBits = operandSizeBits;
+            this.offsetBits = offsetBits;
+        }
+    }
+
+    public static class NativeAddressOperandDataAnnotation extends CodeAnnotation {
+
+        /**
+         * The size of the operand, in bytes.
+         */
+        public final int operandSizeBits;
+        public final int numInstrs;
+
+        NativeAddressOperandDataAnnotation(int instructionPosition, int operandSizeBits, int numInstrs) {
+            super(instructionPosition);
+            this.operandSizeBits = operandSizeBits;
+            this.numInstrs = numInstrs;
         }
     }
 
