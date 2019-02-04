@@ -104,7 +104,24 @@ public enum ELFMachine/* implements Integral */ {
                         throw new IllegalArgumentException("cannot map unknown relocation kind to an ELF x86-64 relocation type");
                 }
             case AArch64:
-                throw new RuntimeException("Unimplemented");
+                switch (k) {
+                    case DIRECT:
+                        switch (sizeInBytes) {
+                            case 8:
+                                return ELFAArch64Relocation.R_AARCH64_ABS64;
+                            case 4:
+                                return ELFAArch64Relocation.R_AARCH64_ABS32;
+                            case 2:
+                                return ELFAArch64Relocation.R_AARCH64_ABS16;
+                            case 1:
+                            default:
+                                return ELFAArch64Relocation.R_AARCH64_NONE;
+                        }
+                    default:
+                    case UNKNOWN:
+                        throw new IllegalArgumentException("cannot map unknown relocation kind to an ELF aarch64 relocation type: " + k);
+
+                }
             case CAVA:
                 switch (k) {
                     case DIRECT_LO:
@@ -137,6 +154,8 @@ public enum ELFMachine/* implements Integral */ {
                 return NONE;
             case 62:
                 return X86_64;
+            case 0xB7:
+                return AArch64;
             default:
                 throw new IllegalStateException("unknown ELF machine type");
         }
@@ -147,6 +166,8 @@ public enum ELFMachine/* implements Integral */ {
             return (short) 0;
         } else if (this == X86_64) {
             return 62;
+        } else if ( this == AArch64 ) {
+            return (short) 0xB7;
         } else if (this == CAVA) {
             return (short) 0xcafe;
         } else {
@@ -155,7 +176,11 @@ public enum ELFMachine/* implements Integral */ {
     }
 
     public static ELFMachine getSystemNativeValue() {
-        return X86_64; // FIXME: query system
+        String arch = System.getProperty("os.arch");
+        if (arch.equals("aarch64")) {
+            return AArch64;
+        }
+        return X86_64;
     }
 }
 
@@ -363,9 +388,40 @@ enum ELFX86_64Relocation implements ELFRelocationMethod {
  */
 enum ELFAArch64Relocation implements ELFRelocationMethod {
     R_AARCH64_NONE(0),
-    R_AARCH64_ABS64(0x101),
-    R_AARCH64_ABS32(0x102),
-    R_AARCH64_ABS16(0x103),
+    R_AARCH64_ABS64(0x101) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 8;
+        }
+    },
+    R_AARCH64_ABS32(0x102) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 4;
+        }
+    },
+    R_AARCH64_ABS16(0x103) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 2;
+        }
+    },
+>>>>>>> aarch64-elf-pr
     R_AARCH64_PREL64(0x104),
     R_AARCH64_PREL32(0x105),
     R_AARCH64_PREL16(0x106),
@@ -496,26 +552,22 @@ enum ELFAArch64Relocation implements ELFRelocationMethod {
 
     @Override
     public RelocationKind getKind() {
-        // TODO Auto-generated method stub
-        return null;
+        return RelocationKind.UNKNOWN;
     }
 
     @Override
     public boolean canUseImplicitAddend() {
-        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean canUseExplicitAddend() {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override
     public int getRelocatedByteSize() {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new UnsupportedOperationException(); // better safe than sorry
     }
 
     @Override
