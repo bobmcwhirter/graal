@@ -30,7 +30,9 @@ import static jdk.vm.ci.aarch64.AArch64.lr;
 import static jdk.vm.ci.aarch64.AArch64.sp;
 import static jdk.vm.ci.hotspot.aarch64.AArch64HotSpotRegisterConfig.fp;
 import static org.graalvm.compiler.core.common.GraalOptions.ZapStackOnMethodEntry;
+import static org.graalvm.compiler.lir.LIRValueUtil.asConstantValue;
 
+import com.oracle.svm.core.config.ConfigurationValues;
 import org.graalvm.compiler.asm.Assembler;
 import org.graalvm.compiler.asm.aarch64.AArch64Address;
 import org.graalvm.compiler.asm.aarch64.AArch64Assembler;
@@ -46,12 +48,14 @@ import org.graalvm.compiler.core.aarch64.AArch64NodeLIRBuilder;
 import org.graalvm.compiler.core.aarch64.AArch64NodeMatchRules;
 import org.graalvm.compiler.core.common.CompilationIdentifier;
 import org.graalvm.compiler.core.common.CompressEncoding;
+import org.graalvm.compiler.core.common.LIRKind;
 import org.graalvm.compiler.core.common.alloc.RegisterAllocationConfig;
 import org.graalvm.compiler.core.common.spi.ForeignCallLinkage;
 import org.graalvm.compiler.core.common.spi.LIRKindTool;
 import org.graalvm.compiler.core.gen.DebugInfoBuilder;
 import org.graalvm.compiler.core.gen.LIRGenerationProvider;
 import org.graalvm.compiler.debug.DebugContext;
+import org.graalvm.compiler.lir.ConstantValue;
 import org.graalvm.compiler.lir.LIR;
 import org.graalvm.compiler.lir.LIRFrameState;
 import org.graalvm.compiler.lir.LIRInstruction;
@@ -60,6 +64,7 @@ import org.graalvm.compiler.lir.LabelRef;
 import org.graalvm.compiler.lir.Opcode;
 import org.graalvm.compiler.lir.StandardOp.BlockEndOp;
 import org.graalvm.compiler.lir.StandardOp.SaveRegistersOp;
+import org.graalvm.compiler.lir.StandardOp.LoadConstantOp;
 import org.graalvm.compiler.lir.Variable;
 import org.graalvm.compiler.lir.aarch64.AArch64BreakpointOp;
 import org.graalvm.compiler.lir.aarch64.AArch64Call;
@@ -68,6 +73,7 @@ import org.graalvm.compiler.lir.aarch64.AArch64FrameMap;
 import org.graalvm.compiler.lir.aarch64.AArch64FrameMapBuilder;
 import org.graalvm.compiler.lir.aarch64.AArch64LIRInstruction;
 import org.graalvm.compiler.lir.aarch64.AArch64Move;
+import org.graalvm.compiler.lir.aarch64.AArch64Move.PointerCompressionOp;
 import org.graalvm.compiler.lir.aarch64.AArch64PrefetchOp;
 import org.graalvm.compiler.lir.asm.CompilationResultBuilder;
 import org.graalvm.compiler.lir.asm.CompilationResultBuilderFactory;
@@ -282,12 +288,19 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
 
         @Override
         public Value emitCompress(Value pointer, CompressEncoding encoding, boolean isNonNull) {
-            throw unimplemented();
+            Variable result = newVariable(getLIRKindTool().getNarrowOopKind());
+            boolean nonNull = useLinearPointerCompression() || isNonNull;
+            append(new AArch64Move.CompressPointerOp(result, asAllocatable(pointer), getRegisterConfig().getHeapBaseRegister().asValue(), encoding, nonNull, getLIRKindTool()));
+            return result;
         }
 
         @Override
         public Value emitUncompress(Value pointer, CompressEncoding encoding, boolean isNonNull) {
-            throw unimplemented();
+            assert pointer.getValueKind(LIRKind.class).getPlatformKind() == getLIRKindTool().getNarrowOopKind().getPlatformKind();
+            Variable result = newVariable(getLIRKindTool().getObjectKind());
+            boolean nonNull = useLinearPointerCompression() || isNonNull;
+            append(new AArch64Move.UncompressPointerOp(result, asAllocatable(pointer), getRegisterConfig().getHeapBaseRegister().asValue(), encoding, nonNull, getLIRKindTool()));
+            return result;
         }
 
         @Override
@@ -552,9 +565,64 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
 
         protected AArch64LIRInstruction loadObjectConstant(AllocatableValue dst, SubstrateObjectConstant constant) {
             if (ReferenceAccess.singleton().haveCompressedReferences()) {
-                unimplemented();
+                RegisterValue heapBase = registerConfig.getHeapBaseRegister().asValue();
+                return new LoadCompressedObjectConstantOp(dst, constant, heapBase, getCompressEncoding(), lirKindTool);
             }
             return new AArch64Move.LoadInlineConstant(constant, dst);
+        }
+    }
+
+    /*
+     * The constant denotes the result produced by this node. Thus if the constant is
+     * compressed, the result must be compressed and vice versa. Both compressed and
+     * uncompressed constants can be loaded by compiled code.
+     *
+     * Method getConstant() could uncompress the constant value from the node input. That would
+     * require a few indirections and an allocation of an uncompressed constant. The allocation
+     * could be eliminated if we stored uncompressed ConstantValue as input. But as this method
+     * looks performance-critical, it is still faster to memorize the original constant in the
+     * node.
+     */
+    public static final class LoadCompressedObjectConstantOp extends PointerCompressionOp implements LoadConstantOp {
+        public static final LIRInstructionClass<LoadCompressedObjectConstantOp> TYPE = LIRInstructionClass.create(LoadCompressedObjectConstantOp.class);
+
+        static JavaConstant asCompressed(SubstrateObjectConstant constant) {
+            // We only want compressed references in code
+            return constant.isCompressed() ? constant : constant.compress();
+        }
+
+        private final SubstrateObjectConstant constant;
+
+        public LoadCompressedObjectConstantOp(AllocatableValue result, SubstrateObjectConstant constant, AllocatableValue baseRegister, CompressEncoding encoding, LIRKindTool lirKindTool) {
+            super(TYPE, result, new ConstantValue(lirKindTool.getNarrowOopKind(), asCompressed(constant)), baseRegister, encoding, true, lirKindTool);
+            this.constant = constant;
+        }
+
+        @Override
+        public Constant getConstant() {
+            return constant;
+        }
+
+        @Override
+        public void emitCode(CompilationResultBuilder crb, AArch64MacroAssembler masm) {
+            /*
+             * WARNING: must NOT have side effects. Preserve the flags register!
+             */
+            Register resultReg = getResultRegister();
+            int referenceSize = ConfigurationValues.getObjectLayout().getReferenceSize();
+            Constant inputConstant = asConstantValue(getInput()).getConstant();
+            if (masm.target.inlineObjects) {
+                crb.recordInlineDataInCode(inputConstant);
+                masm.mov(resultReg, 0xDEADDEADDEADDEADL, true);
+            } else {
+                AArch64Address address = (AArch64Address) crb.recordDataReferenceInCode(inputConstant, referenceSize);
+                masm.loadAddress(resultReg, address, 1);
+            }
+            if (!constant.isCompressed()) { // the result is expected to be uncompressed
+                Register baseReg = getBaseRegister(crb);
+                assert !baseReg.equals(Register.None) || getShift() != 0 : "no compression in place";
+                masm.loadAddress(resultReg, AArch64Address.createRegisterOffsetAddress(baseReg, resultReg, true), getShift());
+            }
         }
     }
 

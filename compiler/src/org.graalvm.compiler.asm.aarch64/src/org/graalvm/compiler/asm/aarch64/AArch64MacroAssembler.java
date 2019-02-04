@@ -282,6 +282,10 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      *            the index register is scaled. Can be 1, 2, 4 or 8.
      */
     public void loadAddress(Register dst, AArch64Address address, int transferSize) {
+        loadAddress(dst, address, transferSize, false);
+    }
+    
+    public void loadAddress(Register dst, AArch64Address address, int transferSize, boolean annotate) {
         assert transferSize == 1 || transferSize == 2 || transferSize == 4 || transferSize == 8;
         assert dst.getRegisterCategory().equals(CPU);
         int shiftAmt = NumUtil.log2Ceil(transferSize);
@@ -377,6 +381,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      */
     public void mov(Register dst, long imm, boolean annotateImm) {
         assert dst.getRegisterCategory().equals(CPU);
+        int pos = position();
         if (imm == 0L) {
             movx(dst, zr);
         } else if (LogicalImmediateTable.isRepresentable(true, imm) != LogicalImmediateTable.Representable.NO) {
@@ -387,14 +392,17 @@ public class AArch64MacroAssembler extends AArch64Assembler {
             // then sign extend
             // them. This allows us to cover immediates like ~1L with 2 instructions.
             mov(dst, (int) imm);
+            annotatePatchingImmediate(pos, 32, 0);
             sxt(64, 32, dst, dst);
         } else {
             mov64(dst, imm);
+            annotatePatchingImmediateNativeAddress(pos, 64, 2);
         }
 
-        if (annotateImm && codePatchingAnnotationConsumer != null) {
-            // TODO write this
-        }
+        //if (annotateImm) {
+            // this is wrong... see mov64 multi-instr.
+            //annotatePatchingImmediateNativeAddress(pos, 64);
+        //}
     }
 
     /**
@@ -436,6 +444,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert (imm & 0xFFFF_0000_0000_0000L) == 0;
         // We have to move all non zero parts of the immediate in 16-bit chunks
         boolean firstMove = true;
+        int pos = position();
         for (int offset = 0; offset < 48; offset += 16) {
             int chunk = (int) (imm >> offset) & NumUtil.getNbitNumberInt(16);
             if (firstMove) {
@@ -444,6 +453,9 @@ public class AArch64MacroAssembler extends AArch64Assembler {
             } else {
                 movk(64, dst, chunk, offset);
             }
+        }
+        if (annotateImm) {
+            annotatePatchingImmediateNativeAddress(pos, 48, 3);
         }
         assert !firstMove;
     }
@@ -1762,6 +1774,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     public void addressOf(Register dst) {
         // This will be fixed up later.
         super.adrp(dst);
+        annotatePatchingImmediate( position(), 12, 0 );
         super.add(64, dst, dst, 0);
     }
 

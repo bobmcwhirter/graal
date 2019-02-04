@@ -157,6 +157,8 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
 
+                    //System.err.println( "for " + call.pcOffset + " // " + call + " // " + System.identityHashCode(call) + " on " + System.identityHashCode(compilation));
+
                     patches.get(call.pcOffset).patch(call.pcOffset, pcDisplacement, compilation.getTargetCode());
                 }
             }
@@ -166,6 +168,7 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                  * Constants are allocated offsets in a separate space, which can be emitted as
                  * read-only (.rodata) section.
                  */
+                System.err.println( "for " + dataPatch.pcOffset + " // " + dataPatch + " // " + System.identityHashCode(dataPatch) + " on " + System.identityHashCode(compilation));
                 patches.get(dataPatch.pcOffset).relocate(ref, relocs, compStart);
             }
         }
