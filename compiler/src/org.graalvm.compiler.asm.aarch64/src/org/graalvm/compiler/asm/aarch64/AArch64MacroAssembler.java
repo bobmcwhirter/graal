@@ -358,10 +358,6 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert !firstMove;
     }
 
-    public void mov(Register dst, long imm) {
-        mov(dst, imm, false);
-    }
-
     /**
      * Loads immediate into register.
      *
