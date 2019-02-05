@@ -421,7 +421,6 @@ enum ELFAArch64Relocation implements ELFRelocationMethod {
             return 2;
         }
     },
->>>>>>> aarch64-elf-pr
     R_AARCH64_PREL64(0x104),
     R_AARCH64_PREL32(0x105),
     R_AARCH64_PREL16(0x106),

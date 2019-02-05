@@ -130,6 +130,7 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
         // in each compilation result...
         for (Entry<HostedMethod, CompilationResult> entry : compilations.entrySet()) {
             HostedMethod method = entry.getKey();
+            System.err.println( "--- patch method: " + method );
             CompilationResult compilation = entry.getValue();
 
             // the codecache-relative offset of the compilation
@@ -146,6 +147,7 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
             for (Infopoint infopoint : compilation.getInfopoints()) {
                 if (infopoint instanceof Call && ((Call) infopoint).direct) {
                     Call call = (Call) infopoint;
+                    System.err.println( "--- patch call: " + call );
 
                     // NOTE that for the moment, we don't make static calls to external
                     // (e.g. native) functions. So every static call site has a target
