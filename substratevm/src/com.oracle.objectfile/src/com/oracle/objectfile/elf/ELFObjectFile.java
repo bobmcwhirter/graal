@@ -76,7 +76,7 @@ public class ELFObjectFile extends ObjectFile {
         this.runtimeDebugInfoGeneration = runtimeDebugInfoGeneration;
         // Create the elements of an empty ELF file:
         // 1. create header
-        header = new ELFHeader("ELFHeader");
+        header = new ELFHeader("ELFHeader", machine);
         // 2. create shstrtab
         shstrtab = new SectionHeaderStrtab();
         // 3. create section header table
@@ -565,10 +565,9 @@ public class ELFObjectFile extends ObjectFile {
             }
         }
 
-        public ELFHeader(String name) { // create an "empty" default ELF header
+        public ELFHeader(String name, ELFMachine machine) { // create an "empty" default ELF header
             super(name);
-            // FIXME: is it really appropriate to initialize the owning ELFObjectFile's fields here?
-            ELFObjectFile.this.machine = ELFMachine.X86_64;
+            ELFObjectFile.this.machine = machine;
             ELFObjectFile.this.version = 1;
             ELFObjectFile.this.processorSpecificFlags = 0;
         }

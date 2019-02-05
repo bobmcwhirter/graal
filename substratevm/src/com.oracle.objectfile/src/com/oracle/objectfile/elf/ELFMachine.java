@@ -104,7 +104,7 @@ public enum ELFMachine/* implements Integral */ {
                         throw new IllegalArgumentException("cannot map unknown relocation kind to an ELF x86-64 relocation type");
                 }
             case AArch64:
-                throw new RuntimeException("Unimplemented");
+                return ELFAArch64Relocation.R_AARCH64_ABS64;
             case CAVA:
                 switch (k) {
                     case DIRECT_LO:
@@ -137,6 +137,8 @@ public enum ELFMachine/* implements Integral */ {
                 return NONE;
             case 62:
                 return X86_64;
+            case 0xB7:
+                return AArch64;
             default:
                 throw new IllegalStateException("unknown ELF machine type");
         }
@@ -145,6 +147,8 @@ public enum ELFMachine/* implements Integral */ {
     public short toShort() {
         if (this == NONE) {
             return (short) 0;
+        } else if (this == AArch64) {
+            return 0xB7;
         } else if (this == X86_64) {
             return 62;
         } else if (this == CAVA) {
@@ -155,7 +159,11 @@ public enum ELFMachine/* implements Integral */ {
     }
 
     public static ELFMachine getSystemNativeValue() {
-        return X86_64; // FIXME: query system
+        if (System.getProperty("os.arch").equals("aarch64")) {
+            return AArch64;
+        } else {
+            return X86_64;
+        }
     }
 }
 
@@ -503,13 +511,13 @@ enum ELFAArch64Relocation implements ELFRelocationMethod {
     @Override
     public boolean canUseImplicitAddend() {
         // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override
     public boolean canUseExplicitAddend() {
         // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override

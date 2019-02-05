@@ -262,7 +262,9 @@ public abstract class ObjectFile {
             public boolean usesSymbolValue() {
                 return false;
             }
-        };
+        },
+
+        AARCH_A;
 
         /**
          * Generally, relocation records come with symbols whose value is used to compute the
