@@ -164,6 +164,8 @@ public enum ELFMachine/* implements Integral */ {
     public short toShort() {
         if (this == NONE) {
             return (short) 0;
+        } else if (this == AArch64) {
+            return 0xB7;
         } else if (this == X86_64) {
             return 62;
         } else if ( this == AArch64 ) {
@@ -176,11 +178,11 @@ public enum ELFMachine/* implements Integral */ {
     }
 
     public static ELFMachine getSystemNativeValue() {
-        String arch = System.getProperty("os.arch");
-        if (arch.equals("aarch64")) {
+        if (System.getProperty("os.arch").equals("aarch64")) {
             return AArch64;
+        } else {
+            return X86_64;
         }
-        return X86_64;
     }
 }
 
