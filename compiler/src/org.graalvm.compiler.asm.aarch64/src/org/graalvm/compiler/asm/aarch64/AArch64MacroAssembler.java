@@ -285,6 +285,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert transferSize == 1 || transferSize == 2 || transferSize == 4 || transferSize == 8;
         assert dst.getRegisterCategory().equals(CPU);
         int shiftAmt = NumUtil.log2Ceil(transferSize);
+        annotatePatchingImmediate(position(), 64);
         switch (address.getAddressingMode()) {
             case IMMEDIATE_SCALED:
                 int scaledImmediate = address.getImmediateRaw() << shiftAmt;

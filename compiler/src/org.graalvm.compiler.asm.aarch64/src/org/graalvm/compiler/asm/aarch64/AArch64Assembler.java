@@ -1162,6 +1162,7 @@ public abstract class AArch64Assembler extends Assembler {
         int is32Bit = type.width == 32 ? 1 << ImmediateSizeOffset : 0;
         int isFloat = !type.isGeneral ? 1 << LoadStoreFpFlagOffset : 0;
         int memop = instr.encoding | transferSizeEncoding | is32Bit | isFloat | rt(reg);
+        annotatePatchingImmediate(position(), instr);
         switch (address.getAddressingMode()) {
             case IMMEDIATE_SCALED:
                 emitInt(memop | LoadStoreScaledOp | address.getImmediate() << LoadStoreScaledImmOffset | rs1(address.getBase()));
@@ -2836,11 +2837,16 @@ public abstract class AArch64Assembler extends Assembler {
         emitInt(DMB.encoding | BarrierOp | barrierKind.encoding << BarrierKindOffset);
     }
 
+    void annotatePatchingImmediate(int pos, Instruction instruction) {
+        if (codePatchingAnnotationConsumer != null) {
+            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(pos, instruction));
+        }
+    }
+
     void annotatePatchingImmediate(int pos, int operandSizeBits) {
         if (codePatchingAnnotationConsumer != null) {
             codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(pos, operandSizeBits));
         }
-
     }
 
     public static class OperandDataAnnotation extends CodeAnnotation {
@@ -2851,11 +2857,20 @@ public abstract class AArch64Assembler extends Assembler {
          * The size of the operand, in bytes.
          */
         public final int operandSizeBits;
+        public final Instruction instruction;
 
         OperandDataAnnotation(int instructionPosition, int operandSizeBits) {
             super(instructionPosition);
             this.instructionPosition = instructionPosition;
             this.operandSizeBits = operandSizeBits;
+            this.instruction = null;
+        }
+
+        OperandDataAnnotation(int instructionPosition, Instruction instruction) {
+            super(instructionPosition);
+            this.instructionPosition = instructionPosition;
+            this.operandSizeBits = -1;
+            this.instruction = instruction;
         }
     }
 

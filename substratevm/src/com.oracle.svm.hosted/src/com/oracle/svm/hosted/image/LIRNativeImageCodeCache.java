@@ -24,6 +24,8 @@
  */
 package com.oracle.svm.hosted.image;
 
+import static com.oracle.svm.core.util.VMError.shouldNotReachHere;
+
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -157,7 +159,12 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
 
-                    patches.get(call.pcOffset).patch(call.pcOffset, pcDisplacement, compilation.getTargetCode());
+                    HostedPatcher patcher = patches.get(call.pcOffset);
+                    if (patcher != null) {
+                        patcher.patch(call.pcOffset, pcDisplacement, compilation.getTargetCode());
+                    } else {
+                        throw shouldNotReachHere("No patcher available for call " + call + " at offset 0x" + Integer.toHexString(call.pcOffset) + " in method " + entry.getKey());
+                    }
                 }
             }
             for (DataPatch dataPatch : compilation.getDataPatches()) {
@@ -166,7 +173,12 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                  * Constants are allocated offsets in a separate space, which can be emitted as
                  * read-only (.rodata) section.
                  */
-                patches.get(dataPatch.pcOffset).relocate(ref, relocs, compStart);
+                HostedPatcher patcher = patches.get(dataPatch.pcOffset);
+                if (patcher != null) {
+                    patcher.relocate(ref, relocs, compStart);
+                } else {
+                    throw shouldNotReachHere("No patcher available for data patch " + dataPatch + " at offset 0x" + Integer.toHexString(dataPatch.pcOffset) + " in method " + entry.getKey());
+                }
             }
         }
     }
