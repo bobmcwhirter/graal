@@ -971,10 +971,10 @@ public abstract class AArch64Assembler extends Assembler {
         int imm = (imm28 & NumUtil.getNbitNumberInt(28)) >> 2;
         int instrEncoding = instr.encoding | UnconditionalBranchImmOp;
         if (pos == -1) {
-            annotatePatchingImmediate(position(), 28, 0);
+            annotatePatchingImmediate(position(), 26, 0);
             emitInt(instrEncoding | imm);
         } else {
-            annotatePatchingImmediate(pos, 28, 0);
+            annotatePatchingImmediate(pos, 26, 0);
             emitInt(instrEncoding | imm, pos);
         }
     }

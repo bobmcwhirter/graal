@@ -396,11 +396,15 @@ public class AArch64MacroAssembler extends AArch64Assembler {
             // then sign extend
             // them. This allows us to cover immediates like ~1L with 2 instructions.
             mov(dst, (int) imm);
-            annotatePatchingImmediate(pos, 32, 0);
+            if ( annotateImm ) {
+                annotatePatchingImmediate(pos, 32, 0);
+            }
             sxt(64, 32, dst, dst);
         } else {
             mov64(dst, imm);
-            annotatePatchingImmediateNativeAddress(pos, 64, 2);
+            if ( annotateImm ) {
+                annotatePatchingImmediateNativeAddress(pos, 64, 2);
+            }
         }
 
         //if (annotateImm) {

@@ -82,6 +82,10 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
     @Uninterruptible(reason = ".")
     @Override
     public void patch(int codePos, int relative, byte[] code) {
+        System.err.println( "PATCH-op: " + dump(relative) );
+        System.err.println( "PATCHING" );
+        dump( code, annotation.instructionPosition);
+
         int curValue = relative - 4; // 32-bit instr, next is 4 bytes away.
 
         int bitsRemaining = annotation.operandSizeBits;
@@ -94,19 +98,54 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
             }
 
             // non-zero bits set
-            int mask = 0b00000000;
+            int mask = 0;
+            System.err.println( "mask for " + bitsRemaining + " // offset: "+  offsetRemaining);
             for ( int j = 0 ; j < 8 ; ++j ) {
-                if ( j > offsetRemaining ) {
+                if ( j >= offsetRemaining ) {
                     mask |= (1 << j);
                     --bitsRemaining;
                 }
+                if ( bitsRemaining == 0 ) {
+                    break;
+                }
             }
 
-            code[annotation.instructionPosition + i] = (byte) ( ( (byte) (curValue & mask) << offsetRemaining) | ( code[annotation.instructionPosition & (~mask << offsetRemaining)]) );
+            //System.err.println( "before-op " + i + ": " + dump( code[annotation.instructionPosition + i]));
+            byte patchTarget = code[annotation.instructionPosition+i];
+            System.err.println( "patching byte: " + dump(patchTarget));
+            System.err.println( "mask: " + dump(mask) + " ~" + dump(~mask << offsetRemaining));
+            byte patch = (byte) (( ((byte) (curValue & 0xFF)) & mask) << offsetRemaining);
+            System.err.println( "patch with: " + dump(curValue) + " == " + dump(patch) );
+            byte retainedPatchTarget = (byte) (patchTarget & ( ~mask << offsetRemaining ));
+            System.err.println( "retain: " + dump(retainedPatchTarget));
+            patchTarget = (byte) (retainedPatchTarget | patch);
+            code[annotation.instructionPosition + i] = patchTarget;
+            System.err.println( "after-op " + i + ": " + dump( code[annotation.instructionPosition + i]));
             curValue = curValue >>> (8 - offsetRemaining);
             offsetRemaining = 0;
         }
+
+        System.err.println( "PATCHED" );
+        dump( code, annotation.instructionPosition);
     }
+
+    public void dump(byte[] bytes, int start) {
+        for ( int i = 0 ; i < 4 ; ++i ) {
+            System.err.println( i + ": " + dump( bytes[start+i] ) );
+        }
+    }
+
+    public String dump(byte b) {
+        return dump( Byte.toUnsignedInt(b));
+    }
+
+    public String dump(int i) {
+        String b = String.format("%32s", Integer.toBinaryString(i)).replace(' ', '0');
+        String h = String.format("%4s", Integer.toHexString(i)).replace(' ', '0');
+        return i + " ["+ b + "] (" + h + ")";
+    }
+
+
 
     @Override
     public boolean equals(Object obj) {
@@ -130,6 +169,7 @@ class AArch64NativeAddressHostedPatcher extends CompilationResult.CodeAnnotation
     @Uninterruptible(reason = ".")
     @Override
     public void patch(int codePos, int relative, byte[] code) {
+        System.err.println( "PATCH-na: " + Integer.toHexString(relative));
         int curValue = relative - (4 * annotation.numInstrs); // 3 32-bit instrs to patch 48-bit movs
 
         int bitsRemaining = annotation.operandSizeBits;
@@ -143,7 +183,9 @@ class AArch64NativeAddressHostedPatcher extends CompilationResult.CodeAnnotation
                 for ( int j = 0 ; j < bitsRemaining ; ++j ) {
                     mask |= ( 1 << j );
                 }
+                System.err.println( "before-na " + i + ": " + Integer.toHexString( code[annotation.instructionPosition + i]));
                 code[annotation.instructionPosition + i] = (byte) ( ( (byte) (curValue & mask) ) | ( code[annotation.instructionPosition & ~mask]) );
+                System.err.println( "after-na " + i + ": " + Integer.toHexString( code[annotation.instructionPosition + i]));
             }
             curValue = curValue >>> 8;
         }
