@@ -2875,12 +2875,13 @@ public abstract class AArch64Assembler extends Assembler {
          */
         public final int operandSizeBits;
         public final int numInstrs;
+        public final Instruction instruction;
 
         NativeAddressOperandDataAnnotation(int instructionPosition, int operandSizeBits, int numInstrs) {
             super(instructionPosition);
             this.operandSizeBits = operandSizeBits;
             this.numInstrs = numInstrs;
+            this.instruction = null;
         }
     }
-
 }
