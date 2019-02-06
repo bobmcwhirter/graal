@@ -130,7 +130,6 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
         // in each compilation result...
         for (Entry<HostedMethod, CompilationResult> entry : compilations.entrySet()) {
             HostedMethod method = entry.getKey();
-            System.err.println( "--- patch method: " + method );
             CompilationResult compilation = entry.getValue();
 
             // the codecache-relative offset of the compilation
@@ -147,32 +146,30 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
             for (Infopoint infopoint : compilation.getInfopoints()) {
                 if (infopoint instanceof Call && ((Call) infopoint).direct) {
                     Call call = (Call) infopoint;
-                    System.err.println( "--- patch call: " + call + " // " + call.debugInfo );
 
                     // NOTE that for the moment, we don't make static calls to external
                     // (e.g. native) functions. So every static call site has a target
                     // which is also in the code cache (a.k.a. a section-local call).
                     // This will change, and we will have to case-split here... but not yet.
                     int callTargetStart = ((HostedMethod) call.target).getCodeAddressOffset();
-                    System.err.println( "call target start: " + callTargetStart);
 
                     // Patch a PC-relative call.
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
-                    System.err.println( "pcDisplacement: " + callTargetStart);
-
-                    //System.err.println( "for " + call.pcOffset + " // " + call + " // " + System.identityHashCode(call) + " on " + System.identityHashCode(compilation));
 
                     patches.get(call.pcOffset).patch(call.pcOffset, pcDisplacement, compilation.getTargetCode());
                 }
             }
+            System.err.println( "relocate method: " + method );
             for (DataPatch dataPatch : compilation.getDataPatches()) {
+                System.err.println( "data patch: " + dataPatch);
                 Reference ref = dataPatch.reference;
                 /*
                  * Constants are allocated offsets in a separate space, which can be emitted as
                  * read-only (.rodata) section.
                  */
                 System.err.println( "for " + dataPatch.pcOffset + " // " + dataPatch + " // " + System.identityHashCode(dataPatch) + " on " + System.identityHashCode(compilation));
+                System.err.println( "==> " + patches.get(dataPatch.pcOffset));
                 patches.get(dataPatch.pcOffset).relocate(ref, relocs, compStart);
             }
         }

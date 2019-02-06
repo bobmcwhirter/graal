@@ -546,7 +546,6 @@ public class CompilationResultBuilder {
 
     private static void emitOp(CompilationResultBuilder crb, LIRInstruction op) {
         try {
-            System.err.println( "emit: " + crb + " >> " + op);
             int start = crb.asm.position();
             op.emitCode(crb);
             if (op.getPosition() != null) {
