@@ -90,6 +90,10 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
 
         int curValue = relative - 4; // 32-bit instr, next is 4 bytes away.
 
+        curValue = curValue >> annotation.shift;
+
+        System.err.println( "adjusted shifted patch: " + dump(curValue));
+
         int bitsRemaining = annotation.operandSizeBits;
         int offsetRemaining = annotation.offsetBits;
 

@@ -151,17 +151,19 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
             for (Infopoint infopoint : compilation.getInfopoints()) {
                 if (infopoint instanceof Call && ((Call) infopoint).direct) {
                     Call call = (Call) infopoint;
-                    System.err.println( "--- patch call: " + call );
+                    System.err.println( "--- patch call: " + call + " // " + call.debugInfo );
 
                     // NOTE that for the moment, we don't make static calls to external
                     // (e.g. native) functions. So every static call site has a target
                     // which is also in the code cache (a.k.a. a section-local call).
                     // This will change, and we will have to case-split here... but not yet.
                     int callTargetStart = ((HostedMethod) call.target).getCodeAddressOffset();
+                    System.err.println( "call target start: " + callTargetStart);
 
                     // Patch a PC-relative call.
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
+                    System.err.println( "pcDisplacement: " + callTargetStart);
 
                     HostedPatcher patcher = patches.get(call.pcOffset);
                     if (patcher != null) {
