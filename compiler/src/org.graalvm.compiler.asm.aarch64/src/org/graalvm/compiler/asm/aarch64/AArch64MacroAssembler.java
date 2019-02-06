@@ -393,7 +393,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
             // them. This allows us to cover immediates like ~1L with 2 instructions.
             mov(dst, (int) imm);
             if ( annotateImm ) {
-                annotatePatchingImmediate(pos, 32, 0);
+                annotatePatchingImmediate(pos, 32, 0, 0);
             }
             sxt(64, 32, dst, dst);
         } else {
@@ -1778,7 +1778,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     public void addressOf(Register dst) {
         // This will be fixed up later.
         super.adrp(dst);
-        annotatePatchingImmediate( position(), 12, 0 );
+        annotatePatchingImmediate( position(), 12, 0, 0 );
         super.add(64, dst, dst, 0);
     }
 
