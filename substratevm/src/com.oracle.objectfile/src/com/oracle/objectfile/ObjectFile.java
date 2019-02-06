@@ -221,7 +221,7 @@ public abstract class ObjectFile {
     }
 
     public static ObjectFile getNativeObjectFile() {
-        return getNativeObjectFile(false);
+        return getNativeObjectFile(true);
     }
 
     public static ObjectFile createRuntimeDebugInfo() {

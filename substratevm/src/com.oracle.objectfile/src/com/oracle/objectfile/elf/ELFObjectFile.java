@@ -72,19 +72,28 @@ public class ELFObjectFile extends ObjectFile {
     private long processorSpecificFlags; // FIXME: to encapsulate (EF_* in elf.h)
     private final boolean runtimeDebugInfoGeneration;
 
-    public ELFObjectFile(boolean runtimeDebugInfoGeneration) {
+    public ELFObjectFile(ELFMachine machine, boolean runtimeDebugInfoGeneration) {
         this.runtimeDebugInfoGeneration = runtimeDebugInfoGeneration;
         // Create the elements of an empty ELF file:
         // 1. create header
-        header = new ELFHeader("ELFHeader", machine);
+        header = new ELFHeader("ELFHeader");
+        this.machine = machine;
         // 2. create shstrtab
         shstrtab = new SectionHeaderStrtab();
         // 3. create section header table
         sht = new SectionHeaderTable(/* shstrtab */);
     }
 
+    public ELFObjectFile(ELFMachine machine) {
+        this(machine, false);
+    }
+
     public ELFObjectFile() {
-        this(false);
+        this(ELFMachine.getSystemNativeValue());
+    }
+
+    public ELFObjectFile(boolean runtimeDebugInfoGeneration) {
+        this(ELFMachine.getSystemNativeValue(), runtimeDebugInfoGeneration);
     }
 
     @Override
@@ -565,9 +574,8 @@ public class ELFObjectFile extends ObjectFile {
             }
         }
 
-        public ELFHeader(String name, ELFMachine machine) { // create an "empty" default ELF header
+        public ELFHeader(String name) { // create an "empty" default ELF header
             super(name);
-            ELFObjectFile.this.machine = machine;
             ELFObjectFile.this.version = 1;
             ELFObjectFile.this.processorSpecificFlags = 0;
         }
