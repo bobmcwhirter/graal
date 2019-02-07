@@ -171,7 +171,9 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     }
                 }
             }
+            System.err.println("relocate method: " + method);
             for (DataPatch dataPatch : compilation.getDataPatches()) {
+                System.err.println("data patch: " + dataPatch);
                 Reference ref = dataPatch.reference;
                 /*
                  * Constants are allocated offsets in a separate space, which can be emitted as

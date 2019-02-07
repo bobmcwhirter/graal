@@ -108,11 +108,13 @@ public enum ELFMachine/* implements Integral */ {
                     case DIRECT:
                         switch (sizeInBytes) {
                             case 8:
-                                return ELFAArch64Relocation.R_AARCH64_ABS64;
+                                return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G3;
+                            case 6:
+                                return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G2;
                             case 4:
-                                return ELFAArch64Relocation.R_AARCH64_ABS32;
+                                return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G1;
                             case 2:
-                                return ELFAArch64Relocation.R_AARCH64_ABS16;
+                                return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G0;
                             case 1:
                             default:
                                 return ELFAArch64Relocation.R_AARCH64_NONE;
@@ -426,13 +428,83 @@ enum ELFAArch64Relocation implements ELFRelocationMethod {
     R_AARCH64_PREL64(0x104),
     R_AARCH64_PREL32(0x105),
     R_AARCH64_PREL16(0x106),
-    R_AARCH64_MOVW_UABS_G0(0x107),
-    R_AARCH64_MOVW_UABS_G0_NC(0x108),
-    R_AARCH64_MOVW_UABS_G1(0x109),
-    R_AARCH64_MOVW_UABS_G1_NC(0x10a),
-    R_AARCH64_MOVW_UABS_G2(0x10b),
-    R_AARCH64_MOVW_UABS_G2_NC(0x10c),
-    R_AARCH64_MOVW_UABS_G3(0x10d),
+    R_AARCH64_MOVW_UABS_G0(0x107) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 2;
+        }
+    },
+    R_AARCH64_MOVW_UABS_G0_NC(0x108) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 2;
+        }
+    },
+    R_AARCH64_MOVW_UABS_G1(0x109) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 4;
+        }
+    },
+    R_AARCH64_MOVW_UABS_G1_NC(0x10a) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 4;
+        }
+    },
+    R_AARCH64_MOVW_UABS_G2(0x10b) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 6;
+        }
+    },
+    R_AARCH64_MOVW_UABS_G2_NC(0x10c) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 6;
+        }
+    },
+    R_AARCH64_MOVW_UABS_G3(0x10d) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.DIRECT;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 8;
+        }
+    },
     R_AARCH64_MOVW_SABS_G0(0x10e),
     R_AARCH64_MOVW_SABS_G1(0x10f),
     R_AARCH64_MOVW_SABS_G2(0x110),

@@ -25,6 +25,11 @@
 
 package org.graalvm.compiler.asm.aarch64;
 
+import static jdk.vm.ci.aarch64.AArch64.CPU;
+import static jdk.vm.ci.aarch64.AArch64.r8;
+import static jdk.vm.ci.aarch64.AArch64.r9;
+import static jdk.vm.ci.aarch64.AArch64.sp;
+import static jdk.vm.ci.aarch64.AArch64.zr;
 import static org.graalvm.compiler.asm.aarch64.AArch64Address.AddressingMode.BASE_REGISTER_ONLY;
 import static org.graalvm.compiler.asm.aarch64.AArch64Address.AddressingMode.EXTENDED_REGISTER_OFFSET;
 import static org.graalvm.compiler.asm.aarch64.AArch64Address.AddressingMode.IMMEDIATE_SCALED;
@@ -35,13 +40,6 @@ import static org.graalvm.compiler.asm.aarch64.AArch64MacroAssembler.AddressGene
 import static org.graalvm.compiler.asm.aarch64.AArch64MacroAssembler.AddressGenerationPlan.WorkPlan.NO_WORK;
 
 import org.graalvm.compiler.asm.BranchTargetOutOfBoundsException;
-
-import static jdk.vm.ci.aarch64.AArch64.CPU;
-import static jdk.vm.ci.aarch64.AArch64.r8;
-import static jdk.vm.ci.aarch64.AArch64.r9;
-import static jdk.vm.ci.aarch64.AArch64.sp;
-import static jdk.vm.ci.aarch64.AArch64.zr;
-
 import org.graalvm.compiler.asm.Label;
 import org.graalvm.compiler.core.common.NumUtil;
 import org.graalvm.compiler.debug.GraalError;
@@ -396,7 +394,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
             // them. This allows us to cover immediates like ~1L with 2 instructions.
             mov(dst, (int) imm);
             if (annotateImm) {
-                annotatePatchingImmediate(pos, 32, 0);
+                annotatePatchingImmediate(pos, 32, 0, 0);
             }
             sxt(64, 32, dst, dst);
         } else {
@@ -1778,7 +1776,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     public void addressOf(Register dst) {
         // This will be fixed up later.
         super.adrp(dst);
-        annotatePatchingImmediate(position(), 12, 0);
+        annotatePatchingImmediate(position(), 12, 0, 0);
         super.add(64, dst, dst, 0);
     }
 
