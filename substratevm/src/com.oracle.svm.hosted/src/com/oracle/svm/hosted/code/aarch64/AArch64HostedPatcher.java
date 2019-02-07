@@ -133,9 +133,9 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
     }
 
     public void dump(byte[] bytes, int start) {
-        for (int i = 0; i < 4; ++i) {
-            System.err.println(i + ": " + dump(bytes[start + i]));
-        }
+// for (int i = 0; i < 4; ++i) {
+// System.err.println(i + ": " + dump(bytes[start + i]));
+// }
     }
 
     public String dump(byte b) {

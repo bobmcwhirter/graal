@@ -817,7 +817,7 @@ public abstract class NativeBootImage extends AbstractBootImage {
 
                 // the map starts out empty...
                 assert textBuffer.mapSize() == 0;
-                codeCache.patchMethods(textBuffer, objectFile);
+                codeCache.patchMethods(debug, textBuffer, objectFile);
                 // but now may be populated
 
                 /*

@@ -257,6 +257,7 @@ import com.oracle.svm.hosted.substitute.UnsafeAutomaticSubstitutionProcessor;
 import jdk.vm.ci.aarch64.AArch64;
 import jdk.vm.ci.amd64.AMD64;
 import jdk.vm.ci.code.Architecture;
+import jdk.vm.ci.code.CodeCacheProvider;
 import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.meta.ConstantReflectionProvider;
 import jdk.vm.ci.meta.JavaKind;
@@ -593,9 +594,9 @@ public class NativeImageGenerator {
                 AfterCompilationAccessImpl config = new AfterCompilationAccessImpl(featureHandler, loader, aUniverse, hUniverse, hMetaAccess, heap, debug);
                 featureHandler.forEachFeature(feature -> feature.afterCompilation(config));
             }
-
+            CodeCacheProvider codeCacheProvider = runtime.getRuntimeConfig().getBackendForNormalMethod().getProviders().getCodeCache();
             try (Indent indent = debug.logAndIndent("create native image")) {
-                try (DebugContext.Scope buildScope = debug.scope("CreateBootImage")) {
+                try (DebugContext.Scope buildScope = debug.scope("CreateBootImage", codeCacheProvider)) {
                     try (StopTimer t = new Timer(imageName, "image").start()) {
 
                         // Start building the model of the native image heap.
@@ -620,6 +621,8 @@ public class NativeImageGenerator {
                             codeCache.printCompilationResults();
                         }
                     }
+                } catch (Throwable e) {
+                    throw VMError.shouldNotReachHere(e);
                 }
             }
 

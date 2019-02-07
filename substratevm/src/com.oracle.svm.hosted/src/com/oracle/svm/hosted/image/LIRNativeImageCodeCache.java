@@ -48,6 +48,8 @@ import com.oracle.svm.hosted.image.NativeBootImage.NativeTextSectionImpl;
 import com.oracle.svm.hosted.meta.HostedMethod;
 import com.oracle.svm.hosted.meta.MethodPointer;
 
+import jdk.vm.ci.code.CodeCacheProvider;
+import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.code.site.Call;
 import jdk.vm.ci.code.site.DataPatch;
 import jdk.vm.ci.code.site.Infopoint;
@@ -103,7 +105,7 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
      * @param relocs a relocation map
      */
     @Override
-    public void patchMethods(RelocatableBuffer relocs, ObjectFile objectFile) {
+    public void patchMethods(DebugContext debug, RelocatableBuffer relocs, ObjectFile objectFile) {
 
         /*
          * Patch instructions which reference code or data by address.
@@ -181,6 +183,12 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                 } else {
                     throw shouldNotReachHere("No patcher available for data patch " + dataPatch + " at offset 0x" + Integer.toHexString(dataPatch.pcOffset) + " in method " + entry.getKey());
                 }
+            }
+// System.out.println(method.getDebugContext().getOptions());
+            try (DebugContext.Scope ds = debug.scope("After Patching", method.asJavaMethod())) {
+                debug.dump(DebugContext.BASIC_LEVEL, compilation, "After patching");
+            } catch (Throwable e) {
+                throw VMError.shouldNotReachHere(e);
             }
         }
     }
