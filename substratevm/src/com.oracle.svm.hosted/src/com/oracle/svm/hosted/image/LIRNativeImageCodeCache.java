@@ -130,6 +130,7 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
         // in each compilation result...
         for (Entry<HostedMethod, CompilationResult> entry : compilations.entrySet()) {
             HostedMethod method = entry.getKey();
+            System.err.println( "relocate method: " + method );
             CompilationResult compilation = entry.getValue();
 
             // the codecache-relative offset of the compilation
@@ -153,6 +154,8 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     // This will change, and we will have to case-split here... but not yet.
                     int callTargetStart = ((HostedMethod) call.target).getCodeAddressOffset();
 
+                    System.err.println( "patch call target: " + call.target);
+
                     // Patch a PC-relative call.
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
@@ -160,7 +163,6 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     patches.get(call.pcOffset).patch(call.pcOffset, pcDisplacement, compilation.getTargetCode());
                 }
             }
-            System.err.println( "relocate method: " + method );
             for (DataPatch dataPatch : compilation.getDataPatches()) {
                 System.err.println( "data patch: " + dataPatch);
                 Reference ref = dataPatch.reference;
