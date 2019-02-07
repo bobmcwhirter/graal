@@ -614,7 +614,6 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
             if (masm.target.inlineObjects) {
                 crb.recordInlineDataInCode(inputConstant);
                 masm.mov(resultReg, 0xDEADDEADDEADDEADL, true);
-                masm.mov(resultReg, 0xDEADDEADDEADDEADL, true);
             } else {
                 AArch64Address address = (AArch64Address) crb.recordDataReferenceInCode(inputConstant, referenceSize);
                 masm.loadAddress(resultReg, address, 1);
@@ -744,6 +743,7 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
     @Override
     public void emitCode(CompilationResultBuilder crb, LIR lir, ResolvedJavaMethod installedCodeOwner) {
         crb.buildLabelOffsets(lir);
+        System.err.println( "=== CRB ==> " + installedCodeOwner + " // " + crb);
         crb.emit(lir);
     }
 

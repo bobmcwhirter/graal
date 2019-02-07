@@ -61,6 +61,7 @@ public enum ELFMachine/* implements Integral */ {
     abstract Class<? extends Enum<? extends RelocationMethod>> relocationTypes();
 
     public static ELFRelocationMethod getRelocation(ELFMachine m, RelocationKind k, int sizeInBytes) {
+        System.err.println( "getRelocation: " + k + " // " + sizeInBytes);
         switch (m) {
             case X86_64:
                 switch (k) {
@@ -118,6 +119,11 @@ public enum ELFMachine/* implements Integral */ {
                             case 1:
                             default:
                                 return ELFAArch64Relocation.R_AARCH64_NONE;
+                        }
+                    case PC_RELATIVE:
+                        switch (sizeInBytes) {
+                            case 8:
+                                return ELFAArch64Relocation.R_AARCH64_ADR_PREL_PG_HI21;
                         }
                     default:
                     case UNKNOWN:
@@ -510,7 +516,17 @@ enum ELFAArch64Relocation implements ELFRelocationMethod {
     R_AARCH64_MOVW_SABS_G2(0x110),
     R_AARCH64_LD_PREL_LO19(0x111),
     R_AARCH64_ADR_PREL_LO21(0x112),
-    R_AARCH64_ADR_PREL_PG_HI21(0x113),
+    R_AARCH64_ADR_PREL_PG_HI21(0x113) {
+        @Override
+        public RelocationKind getKind() {
+            return RelocationKind.PC_RELATIVE;
+        }
+
+        @Override
+        public int getRelocatedByteSize() {
+            return 8; // no, 21 bits
+        }
+    },
     R_AARCH64_ADR_PREL_PG_HI21_NC(0x114),
     R_AARCH64_ADD_ABS_LO12_NC(0x115),
     R_AARCH64_LDST8_ABS_LO12_NC(0x116),
