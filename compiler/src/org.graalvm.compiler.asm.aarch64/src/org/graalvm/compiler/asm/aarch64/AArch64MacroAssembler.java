@@ -400,7 +400,7 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         } else {
             mov64(dst, imm);
             if (annotateImm) {
-                annotatePatchingImmediateNativeAddress(pos, 64, 2);
+                annotatePatchingImmediateNativeAddress(pos, 64, 4);
             }
         }
     }
@@ -1775,8 +1775,9 @@ public class AArch64MacroAssembler extends AArch64Assembler {
 
     public void addressOf(Register dst) {
         // This will be fixed up later.
+        annotatePatchingImmediate(position(), 21, 5, 12);
         super.adrp(dst);
-        annotatePatchingImmediate(position(), 12, 0, 0);
+        annotatePatchingImmediate(position(), 12, 10, 0);
         super.add(64, dst, dst, 0);
     }
 

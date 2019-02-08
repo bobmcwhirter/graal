@@ -124,7 +124,29 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
 
     @Override
     public void relocate(Reference ref, RelocatableBuffer relocs, int compStart) {
-
+        System.err.println("RELOCATE: " + this);
+        /*
+         * The relocation site is some offset into the instruction, which is some offset into the
+         * method, which is some offset into the text section (a.k.a. code cache). The offset we get
+         * out of the RelocationSiteInfo accounts for the first two, since we pass it the whole
+         * method. We add the method start to get the section-relative offset.
+         */
+        /*
+         * 
+         * CURRENTLY DOES NOT WORK
+         * 
+         * long siteOffset = compStart + annotation.instructionPosition; if (ref instanceof
+         * DataSectionReference || ref instanceof CGlobalDataReference) { long addend = 0;
+         * System.err.println( "relocate pc-rel + addend:");
+         * relocs.addPCRelativeRelocationWithAddend((int) siteOffset, 8, addend, ref); } else if
+         * (ref instanceof ConstantReference) { assert SubstrateOptions.SpawnIsolates.getValue() :
+         * "Inlined object references must be base-relative";
+         * //relocs.addDirectRelocationWithoutAddend((int) siteOffset, numInstrs * 2, ref); //for (
+         * int i = 0 ; i < annotation.numInstrs ; ++i ) {
+         * //relocs.addDirectRelocationWithoutAddend((int) siteOffset, //annotation.numInstrs * 2,
+         * //ref); //} } else { throw
+         * VMError.shouldNotReachHere("Unknown type of reference in code"); }
+         */
     }
 }
 
@@ -183,6 +205,11 @@ class AArch64NativeAddressHostedPatcher extends CompilationResult.CodeAnnotation
             assert SubstrateOptions.SpawnIsolates.getValue() : "Inlined object references must be base-relative";
             System.err.println("relocate direct no addend" + (annotation.numInstrs));
             relocs.addDirectRelocationWithoutAddend((int) siteOffset, annotation.numInstrs * 2, ref);
+            // for ( int i = 0 ; i < annotation.numInstrs ; ++i ) {
+            // relocs.addDirectRelocationWithoutAddend((int) siteOffset,
+            // annotation.numInstrs * 2,
+            // ref);
+            // }
         } else {
             throw VMError.shouldNotReachHere("Unknown type of reference in code");
         }
