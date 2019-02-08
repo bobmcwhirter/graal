@@ -29,12 +29,14 @@ import java.util.function.Consumer;
 import org.graalvm.compiler.asm.Assembler.CodeAnnotation;
 import org.graalvm.compiler.asm.aarch64.AArch64Assembler.NativeAddressOperandDataAnnotation;
 import org.graalvm.compiler.asm.aarch64.AArch64Assembler.OperandDataAnnotation;
+import org.graalvm.compiler.asm.aarch64.AArch64MacroAssembler;
 import org.graalvm.compiler.code.CompilationResult;
 import org.graalvm.nativeimage.Feature;
 import org.graalvm.nativeimage.ImageSingletons;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
 
+import com.oracle.objectfile.ObjectFile.RelocationKind;
 import com.oracle.svm.core.SubstrateOptions;
 import com.oracle.svm.core.annotate.AutomaticFeature;
 import com.oracle.svm.core.annotate.Uninterruptible;
@@ -63,6 +65,8 @@ class AArch64HostedPatcherFeature implements Feature {
                             compilationResult.addAnnotation(new AArch64HostedPatcher(annotation.instructionPosition, (OperandDataAnnotation) annotation));
                         } else if (annotation instanceof NativeAddressOperandDataAnnotation) {
                             compilationResult.addAnnotation(new AArch64NativeAddressHostedPatcher(annotation.instructionPosition, (NativeAddressOperandDataAnnotation) annotation));
+                        } else if (annotation instanceof AArch64MacroAssembler.ADRADDPRELMacroInstruction) {
+                            compilationResult.addAnnotation(new ADRADDPRELMacroInstructionHostedPatcher((AArch64MacroAssembler.ADRADDPRELMacroInstruction) annotation));
                         }
                     }
                 };
@@ -132,9 +136,9 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
          * method. We add the method start to get the section-relative offset.
          */
         /*
-         * 
+         *
          * CURRENTLY DOES NOT WORK
-         * 
+         *
          * long siteOffset = compStart + annotation.instructionPosition; if (ref instanceof
          * DataSectionReference || ref instanceof CGlobalDataReference) { long addend = 0;
          * System.err.println( "relocate pc-rel + addend:");
@@ -147,6 +151,34 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
          * //ref); //} } else { throw
          * VMError.shouldNotReachHere("Unknown type of reference in code"); }
          */
+    }
+}
+
+class ADRADDPRELMacroInstructionHostedPatcher extends CompilationResult.CodeAnnotation implements HostedPatcher {
+    private final AArch64MacroAssembler.ADRADDPRELMacroInstruction macroInstruction;
+
+    public ADRADDPRELMacroInstructionHostedPatcher(AArch64MacroAssembler.ADRADDPRELMacroInstruction macroInstruction) {
+        super(macroInstruction.instructionPosition);
+        this.macroInstruction = macroInstruction;
+    }
+
+    @Override
+    public void relocate(Reference ref, RelocatableBuffer relocs, int compStart) {
+        int siteOffset = compStart + macroInstruction.instructionPosition;
+
+        relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADR_PREL_PG_HI21, 0, Long.valueOf(0), ref);
+        siteOffset += 4;
+        relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADD_ABS_LO12_NC, 0, Long.valueOf(0), ref);
+    }
+
+    @Override
+    public void patch(int codePos, int relative, byte[] code) {
+        macroInstruction.patch(codePos, relative, code);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
     }
 }
 

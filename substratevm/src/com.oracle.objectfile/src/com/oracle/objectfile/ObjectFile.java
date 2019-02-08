@@ -263,8 +263,8 @@ public abstract class ObjectFile {
                 return false;
             }
         },
-
-        AARCH_A;
+        AARCH64_R_AARCH64_ADR_PREL_PG_HI21,
+        AARCH64_R_AARCH64_ADD_ABS_LO12_NC;
 
         /**
          * Generally, relocation records come with symbols whose value is used to compute the
