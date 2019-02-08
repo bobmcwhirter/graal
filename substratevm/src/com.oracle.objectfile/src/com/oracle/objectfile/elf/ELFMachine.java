@@ -61,7 +61,7 @@ public enum ELFMachine/* implements Integral */ {
     abstract Class<? extends Enum<? extends RelocationMethod>> relocationTypes();
 
     public static ELFRelocationMethod getRelocation(ELFMachine m, RelocationKind k, int sizeInBytes) {
-        System.err.println( "getRelocation: " + k + " // " + sizeInBytes);
+        System.err.println("getRelocation: " + k + " // " + sizeInBytes);
         switch (m) {
             case X86_64:
                 switch (k) {
@@ -125,6 +125,10 @@ public enum ELFMachine/* implements Integral */ {
                             case 8:
                                 return ELFAArch64Relocation.R_AARCH64_ADR_PREL_PG_HI21;
                         }
+                    case AARCH64_R_AARCH64_ADR_PREL_PG_HI21:
+                        return ELFAArch64Relocation.R_AARCH64_ADR_PREL_PG_HI21;
+                    case AARCH64_R_AARCH64_ADD_ABS_LO12_NC:
+                        return ELFAArch64Relocation.R_AARCH64_ADD_ABS_LO12_NC;
                     default:
                     case UNKNOWN:
                         throw new IllegalArgumentException("cannot map unknown relocation kind to an ELF aarch64 relocation type: " + k);

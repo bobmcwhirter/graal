@@ -1805,4 +1805,35 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     public void lea(Register d, AArch64Address a) {
         a.lea(this, d);
     }
+
+    public interface MacroInstruction {
+        public abstract void patch(int codePos, int relative, byte[] code);
+    }
+
+    /**
+     * Emits elf patchable adrp add sequence
+     */
+    public void adrAddRel(Register result) {
+        if (codePatchingAnnotationConsumer != null) {
+            codePatchingAnnotationConsumer.accept(new ADRADDPRELMacroInstruction(position()));
+        }
+        super.adrp(result);
+        super.add(64, result, result, 0);
+    }
+
+    public static class ADRADDPRELMacroInstruction extends CodeAnnotation implements MacroInstruction {
+        public ADRADDPRELMacroInstruction(int position) {
+            super(position);
+        }
+
+        @Override
+        public String toString() {
+            return "ADR_PREL_PG";
+        }
+
+        @Override
+        public void patch(int codePos, int relative, byte[] code) {
+            throw GraalError.unimplemented();
+        }
+    }
 }
