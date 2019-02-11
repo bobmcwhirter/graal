@@ -1798,12 +1798,12 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     /**
      * Emits elf patchable adrp add sequence
      */
-    public void adrAddRel(Register result) {
+    public void adrAddRel(int srcSize, Register result, AArch64Address a) {
         if (codePatchingAnnotationConsumer != null) {
             codePatchingAnnotationConsumer.accept(new ADRADDPRELMacroInstruction(position()));
         }
-        super.adrp(result);
-        super.add(64, result, result, 0);
+        super.adrp(a.getBase());
+        this.ldr(srcSize, result, a);
     }
 
     public static class ADRADDPRELMacroInstruction extends CodeAnnotation implements MacroInstruction {

@@ -38,6 +38,7 @@ import com.oracle.svm.core.SubstrateUtil;
 import com.oracle.svm.core.graal.code.CGlobalDataInfo;
 import com.oracle.svm.core.graal.code.CGlobalDataReference;
 
+import jdk.vm.ci.code.Register;
 import jdk.vm.ci.meta.AllocatableValue;
 
 public final class AArch64CGlobalDataLoadAddressOp extends AArch64LIRInstruction {
@@ -59,13 +60,15 @@ public final class AArch64CGlobalDataLoadAddressOp extends AArch64LIRInstruction
         if (SubstrateUtil.HOSTED) {
             // AOT compilation: record patch that is fixed up later
             int before = masm.position();
-            AArch64Address address = masm.getPlaceholder(before);
             if (dataInfo.isSymbolReference()) {
                 // Pure symbol reference: the data contains the symbol's address, load it
-                masm.adrAddRel(asRegister(result));
+                Register resultRegister = asRegister(result);
+                AArch64Address address = AArch64Address.createScaledImmediateAddress(resultRegister, 0x0);
+                masm.adrAddRel(64, resultRegister, address);
                 crb.compilationResult.recordDataPatch(before, new CGlobalDataReference(dataInfo));
             } else {
                 // Data: load its address
+                AArch64Address address = masm.getPlaceholder(before);
                 masm.loadAddress(asRegister(result), address, 1, true);
                 crb.compilationResult.recordDataPatch(before + 4, new CGlobalDataReference(dataInfo));
             }

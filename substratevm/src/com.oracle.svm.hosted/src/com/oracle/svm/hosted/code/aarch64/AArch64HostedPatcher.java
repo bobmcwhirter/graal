@@ -168,7 +168,7 @@ class ADRADDPRELMacroInstructionHostedPatcher extends CompilationResult.CodeAnno
 
         relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADR_PREL_PG_HI21, 0, Long.valueOf(0), ref);
         siteOffset += 4;
-        relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADD_ABS_LO12_NC, 0, Long.valueOf(0), ref);
+        relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_LDST64_ABS_LO12_NC, 0, Long.valueOf(0), ref);
     }
 
     @Override
