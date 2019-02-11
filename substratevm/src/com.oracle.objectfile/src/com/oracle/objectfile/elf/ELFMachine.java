@@ -109,9 +109,9 @@ public enum ELFMachine/* implements Integral */ {
                     case DIRECT:
                         switch (sizeInBytes) {
                             case 8:
-                                return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G3;
+                                return ELFAArch64Relocation.R_AARCH64_ABS64;
                             case 6:
-                                return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G2;
+                                return ELFAArch64Relocation.R_AARCH64_ABS32;
                             case 4:
                                 return ELFAArch64Relocation.R_AARCH64_MOVW_UABS_G1;
                             case 2:
@@ -127,8 +127,14 @@ public enum ELFMachine/* implements Integral */ {
                         }
                     case AARCH64_R_AARCH64_ADR_PREL_PG_HI21:
                         return ELFAArch64Relocation.R_AARCH64_ADR_PREL_PG_HI21;
+                    case AARCH64_R_AARCH64_LDST128_ABS_LO12_NC:
+                        return ELFAArch64Relocation.R_AARCH64_LDST128_ABS_LO12_NC;
                     case AARCH64_R_AARCH64_ADD_ABS_LO12_NC:
                         return ELFAArch64Relocation.R_AARCH64_ADD_ABS_LO12_NC;
+                    case AARCH64_R_AARCH64_LDST64_ABS_LO12_NC:
+                        return ELFAArch64Relocation.R_AARCH64_LDST64_ABS_LO12_NC;
+                    case AARCH64_R_AARCH64_LDST8_ABS_LO12_NC:
+                        return ELFAArch64Relocation.R_AARCH64_LDST8_ABS_LO12_NC;
                     default:
                     case UNKNOWN:
                         throw new IllegalArgumentException("cannot map unknown relocation kind to an ELF aarch64 relocation type: " + k);

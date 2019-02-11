@@ -206,11 +206,9 @@ public class AArch64Call {
     }
 
     public static void directCall(CompilationResultBuilder crb, AArch64MacroAssembler masm, InvokeTarget callTarget, Register scratch, LIRFrameState info, Label label) {
-        System.err.println( "direct call: " + callTarget);
         int before = masm.position();
         masm.recordLongCall();
         if (scratch != null) {
-            System.err.println( "scratch not null: " + scratch);
             if (GeneratePIC.getValue(crb.getOptions())) {
                 masm.bl(0);
             } else {
@@ -222,7 +220,6 @@ public class AArch64Call {
                 masm.blr(scratch);
             }
         } else {
-            System.err.println( "scratch is null");
             // Address is fixed up by HotSpot.
             masm.bl(0);
         }
