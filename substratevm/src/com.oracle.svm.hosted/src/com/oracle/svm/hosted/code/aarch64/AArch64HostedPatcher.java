@@ -151,6 +151,10 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
          * //ref); //} } else { throw
          * VMError.shouldNotReachHere("Unknown type of reference in code"); }
          */
+        int siteOffset = compStart + annotation.instructionPosition - 4;
+        relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADR_PREL_PG_HI21, 0, Long.valueOf(0), ref);
+        siteOffset += 4;
+        relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADD_ABS_LO12_NC, 0, Long.valueOf(0), ref);
     }
 }
 
