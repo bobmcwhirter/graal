@@ -678,6 +678,7 @@ public class AArch64Move {
         public static void emitUncompressCode(AArch64MacroAssembler masm, Register inputRegister, Register resReg, Register baseReg, int shift, boolean nonNull) {
             // result = base + (ptr << shift)
             if (nonNull || baseReg == null) {
+                masm.sxt(64, 32, inputRegister, inputRegister);
                 masm.add(64, resReg, baseReg == null ? zr : baseReg, inputRegister, AArch64Assembler.ShiftType.LSL, shift);
             } else {
                 // if ptr is null it has to be null after decompression
