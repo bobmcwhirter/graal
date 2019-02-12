@@ -199,7 +199,7 @@ public class OSCommittedMemoryProvider implements CommittedMemoryProvider {
     }
 
     // Verbose debugging.
-    private static final boolean virtualMemoryVerboseDebugging = false;
+    private static final boolean virtualMemoryVerboseDebugging = true;
 
     private final VirtualMemoryTracker tracker = new VirtualMemoryTracker();
 
