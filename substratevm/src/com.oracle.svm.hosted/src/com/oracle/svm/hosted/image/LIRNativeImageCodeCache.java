@@ -136,7 +136,6 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
         // in each compilation result...
         for (Entry<HostedMethod, CompilationResult> entry : compilations.entrySet()) {
             HostedMethod method = entry.getKey();
-            System.err.println("relocate method: " + method);
             CompilationResult compilation = entry.getValue();
 
             // the codecache-relative offset of the compilation
@@ -160,8 +159,6 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     // This will change, and we will have to case-split here... but not yet.
                     int callTargetStart = ((HostedMethod) call.target).getCodeAddressOffset();
 
-                    System.err.println("patch call target: " + call.target);
-
                     // Patch a PC-relative call.
                     // This code handles the case of section-local calls only.
                     int pcDisplacement = callTargetStart - (compStart + call.pcOffset);
@@ -176,7 +173,6 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
             }
 
             for (DataPatch dataPatch : compilation.getDataPatches()) {
-                System.err.println("data patch: " + dataPatch);
                 Reference ref = dataPatch.reference;
                 /*
                  * Constants are allocated offsets in a separate space, which can be emitted as
@@ -189,7 +185,6 @@ public class LIRNativeImageCodeCache extends NativeImageCodeCache {
                     throw shouldNotReachHere("No patcher available for data patch " + dataPatch + " at offset 0x" + Integer.toHexString(dataPatch.pcOffset) + " in method " + entry.getKey());
                 }
             }
-// System.out.println(method.getDebugContext().getOptions());
             try (DebugContext.Scope ds = debug.scope("After Patching", method.asJavaMethod())) {
                 debug.dump(DebugContext.BASIC_LEVEL, compilation, "After patching");
             } catch (Throwable e) {

@@ -61,7 +61,6 @@ public enum ELFMachine/* implements Integral */ {
     abstract Class<? extends Enum<? extends RelocationMethod>> relocationTypes();
 
     public static ELFRelocationMethod getRelocation(ELFMachine m, RelocationKind k, int sizeInBytes) {
-        System.err.println("getRelocation: " + k + " // " + sizeInBytes);
         switch (m) {
             case X86_64:
                 switch (k) {
