@@ -128,8 +128,11 @@ import com.oracle.svm.core.meta.SharedMethod;
 import com.oracle.svm.core.meta.SharedType;
 import com.oracle.svm.core.meta.SubstrateObjectConstant;
 import com.oracle.svm.core.nodes.SafepointCheckNode;
+import com.oracle.svm.core.util.VMError;
 
 import jdk.vm.ci.aarch64.AArch64;
+import jdk.vm.ci.aarch64.AArch64Kind;
+import jdk.vm.ci.amd64.AMD64Kind;
 import jdk.vm.ci.code.CallingConvention;
 import jdk.vm.ci.code.CodeCacheProvider;
 import jdk.vm.ci.code.CodeUtil;
@@ -573,15 +576,14 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
     }
 
     /*
-     * The constant denotes the result produced by this node. Thus if the constant is
-     * compressed, the result must be compressed and vice versa. Both compressed and
-     * uncompressed constants can be loaded by compiled code.
+     * The constant denotes the result produced by this node. Thus if the constant is compressed,
+     * the result must be compressed and vice versa. Both compressed and uncompressed constants can
+     * be loaded by compiled code.
      *
      * Method getConstant() could uncompress the constant value from the node input. That would
      * require a few indirections and an allocation of an uncompressed constant. The allocation
      * could be eliminated if we stored uncompressed ConstantValue as input. But as this method
-     * looks performance-critical, it is still faster to memorize the original constant in the
-     * node.
+     * looks performance-critical, it is still faster to memorize the original constant in the node.
      */
     public static final class LoadCompressedObjectConstantOp extends PointerCompressionOp implements LoadConstantOp {
         public static final LIRInstructionClass<LoadCompressedObjectConstantOp> TYPE = LIRInstructionClass.create(LoadCompressedObjectConstantOp.class);
@@ -684,7 +686,15 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
     }
 
     protected static class SubstrateAArch64LIRKindTool extends AArch64LIRKindTool {
+        @Override
+        public LIRKind getNarrowOopKind() {
+            return LIRKind.compressedReference(AArch64Kind.QWORD);
+        }
 
+        @Override
+        public LIRKind getNarrowPointerKind() {
+            throw VMError.shouldNotReachHere();
+        }
     }
 
     protected LIRKindTool createLirKindTool() {
@@ -743,7 +753,7 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
     @Override
     public void emitCode(CompilationResultBuilder crb, LIR lir, ResolvedJavaMethod installedCodeOwner) {
         crb.buildLabelOffsets(lir);
-        System.err.println( "=== CRB ==> " + installedCodeOwner + " // " + crb);
+        System.err.println("=== CRB ==> " + installedCodeOwner + " // " + crb);
         crb.emit(lir);
     }
 
