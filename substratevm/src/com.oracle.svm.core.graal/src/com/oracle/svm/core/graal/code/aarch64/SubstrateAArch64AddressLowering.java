@@ -25,10 +25,11 @@
 package com.oracle.svm.core.graal.code.aarch64;
 
 import org.graalvm.compiler.core.aarch64.AArch64AddressLoweringByUse;
-import org.graalvm.compiler.core.aarch64.AArch64LIRKindTool;
+
+import com.oracle.svm.core.graal.code.aarch64.SubstrateAArch64Backend.SubstrateAArch64LIRKindTool;
 
 public class SubstrateAArch64AddressLowering extends AArch64AddressLoweringByUse {
     public SubstrateAArch64AddressLowering() {
-        super(new AArch64LIRKindTool());
+        super(new SubstrateAArch64LIRKindTool());
     }
 }
