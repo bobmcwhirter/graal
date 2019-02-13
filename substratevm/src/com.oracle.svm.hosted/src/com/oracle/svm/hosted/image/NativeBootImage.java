@@ -588,7 +588,7 @@ public abstract class NativeBootImage extends AbstractBootImage {
             long targetValue = targetOffset >>> encShift;
             assert (targetValue << encShift) == targetOffset : "Reference compression shift discards non-zero bits: " + Long.toHexString(targetOffset);
             Architecture arch = GraalAccess.getOriginalTarget().arch;
-            if ( arch instanceof AMD64 ) {
+            if (arch instanceof AMD64) {
                 if (info.getRelocationSize() == Long.BYTES) {
                     buffer.getBuffer().putLong(offset, targetValue);
                 } else if (info.getRelocationSize() == Integer.BYTES) {
@@ -597,29 +597,16 @@ public abstract class NativeBootImage extends AbstractBootImage {
                     new Exception().printStackTrace();
                     shouldNotReachHere("Unsupported object reference size: " + info.getRelocationSize());
                 }
-            } else if ( arch instanceof AArch64 ) {
-                System.err.println( Long.toHexString(offset) + " @ patch in-line for aarch64: " + info.getRelocationSize() + " to " + Long.toHexString(targetValue));
+            } else if (arch instanceof AArch64) {
                 int numInstrs = info.getRelocationSize() / 2;
                 long curValue = targetValue;
 
-                for ( int i = 0 ; i <  numInstrs ; ++i) {
-                    System.err.println( "before: " + Integer.toHexString(buffer.getBuffer().getInt( offset + (4*i))));
+                for (int i = 0; i < numInstrs; ++i) {
                     int instrValue = (int) (curValue & 0xFFFF);
-                    System.err.println( "p1: " + Integer.toHexString(instrValue));
                     instrValue = instrValue << 5;
-                    System.err.println( "p2 " + Integer.toHexString(instrValue));
-                    int prevValue = buffer.getBuffer().getInt(offset + (4*i));
-                    int newValue = ( prevValue & (~( 0xFFFF << 5 ))) | instrValue;
-                    buffer.getBuffer().putInt(offset + (4*i), 0xFFFFFFFF & newValue);
-                    System.err.println( "after: " + Integer.toHexString(buffer.getBuffer().getInt( offset + (4*i))));
-                    //System.err.println( "pre-1: " + Integer.toHexString(buffer.getBuffer().get(offset + (4*i))));
-                    //System.err.println( "pre-2: " + Integer.toHexString(buffer.getBuffer().get(offset + (4*i) + 1)));
-                    //buffer.getBuffer().put( offset + (4 * i), (byte) (curValue & 0xFF ) );
-                    //curValue = curValue >> 8;
-                    //buffer.getBuffer().put( offset + (4 * i) + 1, (byte) (curValue & 0xFF ) );
-                    //curValue = curValue >> 8;
-                    //System.err.println( "post-1: " + Integer.toHexString(buffer.getBuffer().get(offset + (4*i))));
-                    //System.err.println( "post-2: " + Integer.toHexString(buffer.getBuffer().get(offset + (4*i) + 1)));
+                    int prevValue = buffer.getBuffer().getInt(offset + (4 * i));
+                    int newValue = (prevValue & (~(0xFFFF << 5))) | instrValue;
+                    buffer.getBuffer().putInt(offset + (4 * i), 0xFFFFFFFF & newValue);
                     curValue = curValue >> 16;
                 }
             }

@@ -131,33 +131,11 @@ public class AArch64HostedPatcher extends CompilationResult.CodeAnnotation imple
 
     @Override
     public void relocate(Reference ref, RelocatableBuffer relocs, int compStart) {
-        System.err.println( "RELOCATE: " + this);
         /*
          * The relocation site is some offset into the instruction, which is some offset into the
          * method, which is some offset into the text section (a.k.a. code cache). The offset we get
          * out of the RelocationSiteInfo accounts for the first two, since we pass it the whole
          * method. We add the method start to get the section-relative offset.
-         */
-        /*
-
-         CURRENTLY DOES NOT WORK
-
-        long siteOffset = compStart + annotation.instructionPosition;
-        if (ref instanceof DataSectionReference || ref instanceof CGlobalDataReference) {
-            long addend = 0;
-            System.err.println( "relocate pc-rel + addend:");
-            relocs.addPCRelativeRelocationWithAddend((int) siteOffset, 8, addend, ref);
-        } else if (ref instanceof ConstantReference) {
-            assert SubstrateOptions.SpawnIsolates.getValue() : "Inlined object references must be base-relative";
-            //relocs.addDirectRelocationWithoutAddend((int) siteOffset, numInstrs * 2, ref);
-            //for ( int i = 0 ; i < annotation.numInstrs ; ++i ) {
-            //relocs.addDirectRelocationWithoutAddend((int) siteOffset,
-            //annotation.numInstrs * 2,
-            //ref);
-            //}
-        } else {
-            throw VMError.shouldNotReachHere("Unknown type of reference in code");
-        }
          */
         int siteOffset = compStart + annotation.instructionPosition - 4;
         relocs.addRelocation(siteOffset, RelocationKind.AARCH64_R_AARCH64_ADR_PREL_PG_HI21, 0, Long.valueOf(0), ref);
@@ -205,7 +183,7 @@ class AArch64NativeAddressHostedPatcher extends CompilationResult.CodeAnnotation
     @Uninterruptible(reason = ".")
     @Override
     public void patch(int codePos, int relative, byte[] code) {
-        int curValue = relative - (4 * annotation.numInstrs); // 3 32-bit instrs to patch 48-bit
+        int curValue = relative - (4 * annotation.numInstrs); // n 32-bit instrs to patch n 16-bit
                                                               // movs
         int bitsRemaining = annotation.operandSizeBits;
 
@@ -231,7 +209,6 @@ class AArch64NativeAddressHostedPatcher extends CompilationResult.CodeAnnotation
 
     @Override
     public void relocate(Reference ref, RelocatableBuffer relocs, int compStart) {
-        System.err.println( "RELOCATE: " + this);
         /*
          * The relocation site is some offset into the instruction, which is some offset into the
          * method, which is some offset into the text section (a.k.a. code cache). The offset we get
@@ -241,17 +218,10 @@ class AArch64NativeAddressHostedPatcher extends CompilationResult.CodeAnnotation
         long siteOffset = compStart + annotation.instructionPosition;
         if (ref instanceof DataSectionReference || ref instanceof CGlobalDataReference) {
             long addend = 0;
-            System.err.println( "relocate pc-rel + addend: " + (annotation.numInstrs ) );
-            relocs.addPCRelativeRelocationWithAddend((int) siteOffset, annotation.numInstrs * 2 , addend, ref);
+            relocs.addPCRelativeRelocationWithAddend((int) siteOffset, annotation.numInstrs * 2, addend, ref);
         } else if (ref instanceof ConstantReference) {
             assert SubstrateOptions.SpawnIsolates.getValue() : "Inlined object references must be base-relative";
-            System.err.println( "relocate direct no addend " + ( annotation.numInstrs ));
             relocs.addDirectRelocationWithoutAddend((int) siteOffset, annotation.numInstrs * 2, ref);
-            //for ( int i = 0 ; i < annotation.numInstrs ; ++i ) {
-                //relocs.addDirectRelocationWithoutAddend((int) siteOffset,
-                                                        //annotation.numInstrs * 2,
-                                                        //ref);
-            //}
         } else {
             throw VMError.shouldNotReachHere("Unknown type of reference in code");
         }
