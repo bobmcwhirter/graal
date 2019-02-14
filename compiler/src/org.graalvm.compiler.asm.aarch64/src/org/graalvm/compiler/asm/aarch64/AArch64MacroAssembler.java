@@ -291,7 +291,6 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert transferSize == 1 || transferSize == 2 || transferSize == 4 || transferSize == 8;
         assert dst.getRegisterCategory().equals(CPU);
         int shiftAmt = NumUtil.log2Ceil(transferSize);
-        annotatePatchingImmediate(position(), 64);
         switch (address.getAddressingMode()) {
             case IMMEDIATE_SCALED:
                 int scaledImmediate = address.getImmediateRaw() << shiftAmt;
@@ -350,7 +349,6 @@ public class AArch64MacroAssembler extends AArch64Assembler {
     private void mov64(Register dst, long imm) {
         // We have to move all non zero parts of the immediate in 16-bit chunks
         boolean firstMove = true;
-        annotatePatchingImmediate(position(), 64);
         for (int offset = 0; offset < 64; offset += 16) {
             int chunk = (int) (imm >> offset) & NumUtil.getNbitNumberInt(16);
             if (chunk == 0) {
@@ -468,12 +466,6 @@ public class AArch64MacroAssembler extends AArch64Assembler {
         assert !firstMove;
     }
 
-    public void recordLongCall() {
-        if (codePatchingAnnotationConsumer != null) {
-            codePatchingAnnotationConsumer.accept(new OperandDataAnnotation(position(), 64));
-        }
-    }
-
     /**
      * Generates a 32-bit immediate move code sequence. The immediate may later be updated by
      * HotSpot.
@@ -483,7 +475,6 @@ public class AArch64MacroAssembler extends AArch64Assembler {
      */
     public void movNarrowAddress(Register dst, long imm) {
         assert (imm & 0xFFFF_FFFF_0000_0000L) == 0;
-        annotatePatchingImmediate(position(), 32);
         movz(64, dst, (int) (imm >>> 16), 16);
         movk(64, dst, (int) (imm & 0xffff), 0);
     }

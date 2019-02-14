@@ -100,7 +100,7 @@ public class HotSpotDisassemblerProvider implements DisassemblerProvider {
             for (Mark mark : compResult.getMarks()) {
                 putAnnotation(annotations, mark.pcOffset, codeCache.getMarkName(mark));
             }
-            for (CodeAnnotation a : compResult.getAnnotations()) {
+            for (CodeAnnotation a : compResult.getCodeAnnotations()) {
                 putAnnotation(annotations, a.position, a.toString());
             }
             for (Infopoint infopoint : compResult.getInfopoints()) {
