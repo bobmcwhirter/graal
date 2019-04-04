@@ -31,6 +31,7 @@ import pprint
 import json
 import re
 import subprocess
+import pprint
 
 from abc import ABCMeta
 from argparse import ArgumentParser
@@ -1082,8 +1083,11 @@ def graalvm_home_relative_classpath(dependencies, start=None, with_boot_jars=Fal
     for _cp_entry in mx.classpath_entries(dependencies):
         if _cp_entry.isJdkLibrary() or _cp_entry.isJreLibrary():
             jdk = _get_jdk()
-            jdk_location = relpath(_cp_entry.classpath_repr(jdk), jdk.home)
-            graalvm_location = join(graal_vm.jdk_base, jdk_location)
+            if not _cp_entry.is_provided_by(jdk): 
+                jdk_location = relpath(_cp_entry.classpath_repr(jdk), jdk.home)
+                graalvm_location = join(graal_vm.jdk_base, jdk_location)
+            else:
+                print( _cp_entry.module + " is provided by the JDK");
         else:
             graalvm_location = graal_vm.find_single_source_location('dependency:{}:{}'.format(_cp_entry.suite, _cp_entry.name), fatal_if_missing=False)
             if graalvm_location is None and _cp_entry.isDistribution():
@@ -1852,8 +1856,8 @@ def check_versions(jdk_dir, jdk_version_regex, graalvm_version_regex, expect_gra
     match = jdk_version_regex.match(out)
     if match is None:
         mx.abort("'{}' has an unexpected version string:\n{}\ndoes not match:\n{}".format(jdk_dir, out, jdk_version_regex.pattern))
-    elif not match.group('jvm_version').startswith("1.8.0"):
-        mx.abort("GraalVM requires a JDK8 as base-JDK, while the selected JDK ('{}') is '{}':\n{}\n{}.".format(jdk_dir, match.group('jvm_version'), out, check_env))
+    elif not ( match.group('jvm_version').startswith("1.8.0") or match.group('jvm_version').startswith("11")):
+        mx.abort("GraalVM requires a JDK8 or JDK11 as base-JDK, while the selected JDK ('{}') is '{}':\n{}\n{}.".format(jdk_dir, match.group('jvm_version'), out, check_env))
 
     match = graalvm_version_regex.match(out)
     if expect_graalvm and match is None:
