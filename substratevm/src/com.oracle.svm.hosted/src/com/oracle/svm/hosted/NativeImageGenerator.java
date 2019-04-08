@@ -1504,7 +1504,9 @@ public class NativeImageGenerator {
             RuntimeClassInitialization.eagerClassInitialization(clazz);
             nativeLibs.loadJavaType(metaAccess.lookupJavaType(clazz));
         }
+        System.err.println( "LOADER: " + loader);
         for (Class<?> clazz : loader.findAnnotatedClasses(CPointerTo.class)) {
+            System.err.println( "find annotated: " + clazz);
             RuntimeClassInitialization.eagerClassInitialization(clazz);
             nativeLibs.loadJavaType(metaAccess.lookupJavaType(clazz));
         }

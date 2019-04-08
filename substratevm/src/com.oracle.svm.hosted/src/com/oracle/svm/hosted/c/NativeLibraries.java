@@ -205,6 +205,7 @@ public final class NativeLibraries {
     }
 
     public void loadJavaType(ResolvedJavaType type) {
+        System.err.println( "loadJavaType: " + type );
         NativeCodeContext context = makeContext(getDirectives(type));
 
         if (!context.isInConfiguration()) {
@@ -263,6 +264,7 @@ public final class NativeLibraries {
     }
 
     public void registerElementInfo(AnnotatedElement e, ElementInfo elementInfo) {
+        System.err.println( "register: " + e + " >> " + elementInfo);
         Object element = unwrap(e);
         assert !elementToInfo.containsKey(element);
         elementToInfo.put(element, elementInfo);
@@ -270,10 +272,14 @@ public final class NativeLibraries {
 
     public ElementInfo findElementInfo(AnnotatedElement element) {
         Object element1 = unwrap(element);
+        System.err.println( "findElementInfo for " + element + " >> " + element1);
         ElementInfo result = elementToInfo.get(element1);
+        System.err.println( "result: " + result );
         if (result == null && element1 instanceof ResolvedJavaType && ((ResolvedJavaType) element1).getInterfaces().length == 1) {
+            System.err.println( "recurse");
             result = findElementInfo(((ResolvedJavaType) element1).getInterfaces()[0]);
         }
+        System.err.println( "return: " + result + " for " + element );
         return result;
     }
 

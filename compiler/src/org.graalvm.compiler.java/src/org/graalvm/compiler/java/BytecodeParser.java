@@ -2191,6 +2191,7 @@ public class BytecodeParser implements GraphBuilderContext {
     }
 
     private boolean tryNodePluginForInvocation(ValueNode[] args, ResolvedJavaMethod targetMethod) {
+        System.err.println( "tryNodePlugin for: " + targetMethod);
         for (NodePlugin plugin : graphBuilderConfig.getPlugins().getNodePlugins()) {
             if (plugin.handleInvoke(this, targetMethod, args)) {
                 return true;

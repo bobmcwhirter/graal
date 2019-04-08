@@ -1016,6 +1016,9 @@ class GraalVmBashLauncherBuildTask(GraalVmNativeImageBuildTask):
         mx.ensure_dir_exists(dirname(output_file))
         graal_vm = self.subject.get_containing_graalvm()
         script_destination_directory = dirname(graal_vm.find_single_source_location('dependency:' + self.subject.name))
+
+        pprint.pprint("YO");
+        pprint.pprint(graal_vm.version);
         jre_bin = _get_graalvm_archive_path('jre/bin', graal_vm=graal_vm)
 
         def _get_classpath():
@@ -1086,8 +1089,6 @@ def graalvm_home_relative_classpath(dependencies, start=None, with_boot_jars=Fal
             if not _cp_entry.is_provided_by(jdk): 
                 jdk_location = relpath(_cp_entry.classpath_repr(jdk), jdk.home)
                 graalvm_location = join(graal_vm.jdk_base, jdk_location)
-            else:
-                print( _cp_entry.module + " is provided by the JDK");
         else:
             graalvm_location = graal_vm.find_single_source_location('dependency:{}:{}'.format(_cp_entry.suite, _cp_entry.name), fatal_if_missing=False)
             if graalvm_location is None and _cp_entry.isDistribution():

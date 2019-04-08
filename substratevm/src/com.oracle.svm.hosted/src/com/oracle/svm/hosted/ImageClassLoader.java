@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import jdk.internal.module.Modules;
 import org.graalvm.collections.EconomicSet;
 import org.graalvm.compiler.word.Word;
 import org.graalvm.nativeimage.Platform;
@@ -109,6 +110,8 @@ public final class ImageClassLoader {
                 }
             }
         }
+
+        System.err.println( "filtered classpath: " + classpathFiltered);
 
         ImageClassLoader result = new ImageClassLoader(platform, classpathFiltered.toArray(new String[classpathFiltered.size()]), classLoader);
         result.initAllClasses();
@@ -188,6 +191,7 @@ public final class ImageClassLoader {
             if (Files.isRegularFile(path)) {
                 try {
                     URI jarURI = new URI("jar:" + path.toAbsolutePath().toUri());
+                    System.err.println( "---jar-->" + path.toAbsolutePath());
                     try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarURI, Collections.emptyMap())) {
                         initAllClasses(jarFileSystem.getPath("/"), Collections.emptySet(), executor);
                     }
@@ -260,6 +264,7 @@ public final class ImageClassLoader {
                             Class<?> systemClass = forName(className);
                             if (includedInPlatform(systemClass)) {
                                 synchronized (systemClasses) {
+                                    System.err.println( "systemClass: " + systemClass);
                                     systemClasses.add(systemClass);
                                 }
                                 findSystemElements(systemClass);

@@ -47,8 +47,12 @@ public final class SizeOfSupportImpl implements SizeOfSupport {
 
     @Override
     public int sizeof(Class<? extends PointerBase> clazz) {
+        System.err.println( "metaAccess: " + metaAccess);
         ResolvedJavaType type = metaAccess.lookupJavaType(clazz);
+        System.err.println( "nativeLibraries: " + nativeLibraries);
         ElementInfo typeInfo = nativeLibraries.findElementInfo(type);
+        System.err.println( "type: " + type + " for " + clazz );
+        System.err.println("sizeOf: " + typeInfo + ( typeInfo == null ? " <ACTUAL NULL> " : typeInfo.getClass().getName() ) + " // " + (typeInfo instanceof StructInfo) + " // " + (typeInfo instanceof SizableInfo));
         if (typeInfo instanceof StructInfo && ((StructInfo) typeInfo).isIncomplete()) {
             throw UserError.abort("Class parameter " + type.toJavaName(true) + " of call to " + SizeOf.class.getSimpleName() + " is an incomplete structure, so no size is available");
         } else if (typeInfo instanceof SizableInfo) {

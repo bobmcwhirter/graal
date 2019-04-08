@@ -104,6 +104,7 @@ public class InfoTreeBuilder {
             createRawStructInfo(type);
         }
         for (ResolvedJavaType type : codeCtx.getPointerToTypes()) {
+            System.err.println( "codeCtx: " + codeCtx.getPointerToTypes());
             createPointerToInfo(type);
         }
         for (ResolvedJavaType type : codeCtx.getEnumTypes()) {
@@ -137,6 +138,7 @@ public class InfoTreeBuilder {
     }
 
     private void createPointerToInfo(ResolvedJavaType type) {
+        System.err.println( "createPointerToInfo: " + type);
         if (!validInterfaceDefinition(type, CPointerTo.class)) {
             return;
         }
