@@ -1019,7 +1019,23 @@ class GraalVmBashLauncherBuildTask(GraalVmNativeImageBuildTask):
         graal_vm = self.subject.get_containing_graalvm()
         script_destination_directory = dirname(graal_vm.find_single_source_location('dependency:' + self.subject.name))
 
+        #start = _get_graalvm_archive_path('', graal_vm=graal_vm)
+        start = script_destination_directory;
+
+        print("HOWDY");
+
+        graal_sdk = relpath(graal_vm.find_single_source_location('dependency:sdk:GRAAL_SDK'),start);
+        truffle_api = relpath(graal_vm.find_single_source_location('dependency:truffle:TRUFFLE_API'),start);
+        graal_jar = relpath(graal_vm.find_single_source_location('dependency:compiler:GRAAL'),start);
+        graal_management_jar = relpath(graal_vm.find_single_source_location('dependency:compiler:GRAAL_MANAGEMENT'), start);
+
         jre_bin = _get_graalvm_archive_path('bin', graal_vm=graal_vm)
+
+        def _get_module_path():
+            return graal_sdk + ":"  + truffle_api;
+
+        def _get_upgrade_module_path():
+            return graal_jar + ":" + graal_management_jar;
 
         def _get_classpath():
             return graalvm_home_relative_classpath(self.subject.native_image_jar_distributions, script_destination_directory, graal_vm=graal_vm)
@@ -1034,6 +1050,8 @@ class GraalVmBashLauncherBuildTask(GraalVmNativeImageBuildTask):
         _template_subst.register_no_arg('classpath', _get_classpath)
         _template_subst.register_no_arg('jre_bin', _get_jre_bin)
         _template_subst.register_no_arg('main_class', _get_main_class)
+        _template_subst.register_no_arg('module_path', _get_module_path)
+        _template_subst.register_no_arg('upgrade_module_path', _get_upgrade_module_path)
 
         with open(self._template_file(), 'r') as template, mx.SafeFileCreation(output_file) as sfc, open(sfc.tmpPath, 'w') as launcher:
             for line in template:
@@ -1069,7 +1087,6 @@ _known_missing_jars = {
     'JNR_CONSTANTS',
     'JDK_TOOLS',
 }
-
 
 def graalvm_home_relative_classpath(dependencies, start=None, with_boot_jars=False, graal_vm=None):
     if graal_vm is None:
@@ -1108,6 +1125,7 @@ def graalvm_home_relative_classpath(dependencies, start=None, with_boot_jars=Fal
                 mx.abort("Could not find '{}:{}' in GraalVM ('{}')".format(_cp_entry.suite, _cp_entry.name, graal_vm.name))
         if not with_boot_jars and (graalvm_location.startswith(boot_jars_directory) or _cp_entry.isJreLibrary()):
             continue
+        print("adding " + graalvm_location + " in " + start + " as " + relpath(graalvm_location,start) );
         _cp.add(relpath(graalvm_location, start))
     return os.pathsep.join(_cp)
 

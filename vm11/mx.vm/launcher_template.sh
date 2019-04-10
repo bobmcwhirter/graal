@@ -45,6 +45,18 @@ for e in "${relative_cp[@]}"; do
     absolute_cp+=("${location}/${e}")
 done
 
+IFS=: read -ra relative_module_path <<< "<module_path>"
+absolute_module_path=()
+for e in "${relative_module_path[@]}"; do
+    absolute_module_path+=("${location}/${e}")
+done
+
+IFS=: read -ra relative_upgrade_module_path <<< "<upgrade_module_path>"
+absolute_upgrade_module_path=()
+for e in "${relative_upgrade_module_path[@]}"; do
+    absolute_upgrade_module_path+=("${location}/${e}")
+done
+
 jvm_args=("-Dorg.graalvm.launcher.shell=true")
 launcher_args=()
 
@@ -104,18 +116,18 @@ for o in "$@"; do
     fi
 done
 
-jvm_args+=" -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI "
-jvm_args+=" --module-path=/Users/bob/repos/graal/sdk/mxbuild/dists/jdk11/graal-sdk.jar:/Users/bob/repos/graal/truffle/mxbuild/dists/jdk11/truffle-api.jar "
-jvm_args+=" --upgrade-module-path=/Users/bob/repos/graal/compiler/mxbuild/dists/jdk11/graal.jar:/Users/bob/repos/graal/compiler/mxbuild/dists/jdk11/graal-management.jar "
+#jvm_args+=" -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI "
+#jvm_args+=" --module-path=/Users/bob/repos/graal/sdk/mxbuild/dists/jdk11/graal-sdk.jar:/Users/bob/repos/graal/truffle/mxbuild/dists/jdk11/truffle-api.jar "
+#jvm_args+=" --upgrade-module-path=/Users/bob/repos/graal/compiler/mxbuild/dists/jdk11/graal.jar:/Users/bob/repos/graal/compiler/mxbuild/dists/jdk11/graal-management.jar "
+#jvm_args+=" --module-path=<module_path>"
+#jvm_args+=" --upgrade-module-path=<upgrade_module_path>"
 
 cp="$(IFS=: ; echo "${absolute_cp[*]}")"
+module_path="$(IFS=: ; echo "${absolute_module_path[*]}")"
+upgrade_module_path="$(IFS=: ; echo "${absolute_upgrade_module_path[*]}")"
 
 if [[ "${VERBOSE_GRAALVM_LAUNCHERS}" == "true" ]]; then
     set -x
 fi
 
-echo "------------------"
-echo "${location}/<jre_bin>/java" ${jvm_args[@]} -cp "${cp}" "<main_class>" "${launcher_args[@]}"
-echo "------------------"
-
-exec "${location}/<jre_bin>/java" ${jvm_args[@]} -cp "${cp}" "<main_class>" "${launcher_args[@]}"
+exec "${location}/<jre_bin>/java" ${jvm_args[@]} -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI --module-path="${module_path}" --upgrade-module-path="${upgrade_module_path}" -cp "${cp}" "<main_class>" "${launcher_args[@]}"
