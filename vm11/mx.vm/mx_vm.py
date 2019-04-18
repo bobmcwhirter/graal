@@ -577,13 +577,14 @@ class SvmSupport(object):
         native_image_command += [
             '-H:Path=' + output_directory or ".",
             '-H:Name=' + name,
+            '-H:Dump=',
+            '-H:MethodFilter=Unsafe.copyMemory',
             '-J--module-path=' + graal_sdk_jar + ':' + truffle_api_jar,
             '-J--upgrade-module-path=' + graal_jar + ':' + graal_management_jar,
             '-J--add-opens=org.graalvm.truffle/com.oracle.truffle.polyglot=ALL-UNNAMED',
             '-J--add-opens=org.graalvm.truffle/com.oracle.truffle.api.impl=ALL-UNNAMED',
             '-J--add-opens=jdk.internal.vm.compiler/org.graalvm.compiler.debug=ALL-UNNAMED',
             '-J--add-opens=org.graalvm.sdk/org.graalvm.polyglot=ALL-UNNAMED',
-
         ]
         return mx.run(native_image_command, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err)
 

@@ -201,7 +201,11 @@ public class BytecodeDisassembler {
             case INVOKESPECIAL  :
             case INVOKESTATIC   : {
                 int cpi = stream.readCPI();
+                //System.err.println( "cpi=" + cpi );
                 JavaMethod callee = cp.lookupMethod(cpi, opcode);
+                //System.err.println( "cp=" + cp);
+                //System.err.println( "opcode=" + opcode);
+                //System.err.println( "callee=" + callee );
                 String calleeDesc = callee.getDeclaringClass().getName().equals(method.getDeclaringClass().getName()) ? callee.format("%n:(%P)%R") : callee.format("%H.%n:(%P)%R");
                 buf.append(String.format("#%-10d // %s", cpi, calleeDesc));
                 break;

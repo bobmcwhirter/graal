@@ -75,6 +75,7 @@ import org.graalvm.compiler.lir.aarch64.AArch64LIRInstruction;
 import org.graalvm.compiler.lir.aarch64.AArch64Move;
 import org.graalvm.compiler.lir.aarch64.AArch64Move.PointerCompressionOp;
 import org.graalvm.compiler.lir.aarch64.AArch64PrefetchOp;
+import org.graalvm.compiler.lir.amd64.AMD64Move;
 import org.graalvm.compiler.lir.asm.CompilationResultBuilder;
 import org.graalvm.compiler.lir.asm.CompilationResultBuilderFactory;
 import org.graalvm.compiler.lir.asm.DataBuilder;
@@ -393,6 +394,24 @@ public class SubstrateAArch64Backend extends SubstrateBackend implements LIRGene
         @Override
         public LIRInstruction createZapArgumentSpace(StackSlot[] zappedStack, JavaConstant[] zapValues) {
             throw unimplemented();
+        }
+
+        @Override
+        public void emitConvertNullToZero(AllocatableValue result, Value value) {
+            if (useLinearPointerCompression()) {
+                append(new AArch64Move.ConvertNullToZeroOp(result, (AllocatableValue) value));
+            } else {
+                emitMove(result, value);
+            }
+        }
+
+        @Override
+        public void emitConvertZeroToNull(AllocatableValue result, Value value) {
+            if (useLinearPointerCompression()) {
+                append(new AArch64Move.ConvertZeroToNullOp(result, (AllocatableValue) value));
+            } else {
+                emitMove(result, value);
+            }
         }
 
         @Override
