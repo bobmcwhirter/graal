@@ -118,6 +118,8 @@ class JavaNetNetUtil {
         // 071     parseExclusiveBindProperty(env);
         JavaNetNetUtilMD.parseExclusiveBindProperty();
         // 073 return JNI_VERSION_1_2;
+
+        REUSEPORT_available = JavaNetNetUtilMD.reuseport_supported();
     }
     /* @formatter:on */
 
@@ -149,6 +151,16 @@ class JavaNetNetUtil {
     static boolean ipv6_available() {
         // 037 return IPv6_available ;
         return IPv6_available;
+    }
+
+    // ported from: ./src/java.base/share/native/libnet/net_util.c
+    //    36  static int REUSEPORT_available;
+    static boolean REUSEPORT_available;
+
+    //    48  JNIEXPORT jint JNICALL reuseport_available()
+    static boolean reuseport_available() {
+        //    50      return REUSEPORT_available;
+        return REUSEPORT_available;
     }
 
     // 226 JNIEXPORT jobject JNICALL
@@ -893,6 +905,40 @@ class JavaNetNetUtilMD {
         return ((a.s6_addr().read(0) == (byte) 0xfe) && (a.s6_addr().read(1) == (byte) 0x80));
     }
     /* @formatter:on */
+
+    // ported from: ./src/java.base//unix/native/libnet/net_util_md.c
+    //   408  jint reuseport_supported()
+    static boolean reuseport_supported() {
+        //   409  {
+        //   410      /* Do a simple dummy call, and try to figure out from that */
+        //   411      int one = 1;
+        CIntPointer one = StackValue.get(CIntPointer.class);
+        one.write(1);
+        //   412      int rv, s;
+        int rv, s;
+        //   413      s = socket(PF_INET, SOCK_STREAM, 0);
+        s = Socket.socket(Socket.PF_INET(), Socket.SOCK_STREAM(), 0);
+        //   414      if (s < 0) {
+        if (s < 0) {
+            //   415          return JNI_FALSE;
+            return false;
+        }
+        //   417      rv = setsockopt(s, SOL_SOCKET, SO_REUSEPORT, (void *)&one, sizeof(one));
+        rv = Socket.setsockopt(s, Socket.SOL_SOCKET(), Socket.SO_REUSEPORT(), one, SizeOf.get(CIntPointer.class));
+        //   418      if (rv != 0) {
+        try {
+            if (rv != 0) {
+                //   419          rv = JNI_FALSE;
+                return false;
+            } else {
+                //   421          rv = JNI_TRUE;
+                return true;
+            }
+        } finally {
+            //   423      close(s);
+            Unistd.close(s);
+        }
+    }
 
     @Platforms(Platform.LINUX.class)//
     /* TODO: This will be evaluated during native image generation. */
